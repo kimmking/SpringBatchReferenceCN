@@ -1,0 +1,18 @@
+{
+    "github": "kimmking/SpringBatchReferenceCN",
+    "githubHost": "https://github.com/",
+    "plugins": [],
+    "pluginsConfig": {
+        "fontSettings": {
+            "theme": "white",
+            "family": "serif",
+            "size": 4
+        }
+    },
+    "links": {
+        "home": "http://kimmking.gitbooks.io",
+        "about": "http://kimmking.github.io/about",
+        "issues": "https://github.com/kimmking/SpringBatchReferenceCN/issues",
+        "contribute": "https://github.com/kimmking/SpringBatchReferenceCN"
+    }
+}
