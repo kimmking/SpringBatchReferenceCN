@@ -5,7 +5,7 @@
     "pluginsConfig": {
         "fontSettings": {
             "theme": "white",
-            "family": "微软雅黑",
+            "family": "serif",
             "size": 4
         }
     },
