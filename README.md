@@ -13,12 +13,7 @@
 翻译组成员列表如下：
 * kimmking(http://blog.csdn.net/kimmking)
 * 铁喵(http://blog.csdn.net/renfufei)
-
-
-
-
-
-
+* stormhouse(http://stormhouse.github.io/)
 
 
 
