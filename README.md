@@ -14,11 +14,8 @@
 
 翻译组成员列表如下：
 
-* kimmking(http://blog.csdn.net/kimmking)
-
-* 铁锚(http://blog.csdn.net/renfufei)
-
-* stormhouse(http://stormhouse.github.io/)
-
-
+* kimmking([http://blog.csdn.net/kimmking](http://blog.csdn.net/kimmking))
+* 铁锚([http://blog.csdn.net/renfufei](http://blog.csdn.net/renfufei))
+* stormhouse([http://stormhouse.github.io/](http://stormhouse.github.io/))
+* Sean([http://caochengbo.iteye.com](http://caochengbo.iteye.com))
 
