@@ -1,13 +1,13 @@
-# 扩展与并行处理
+# 7.扩展与并行处理
 
-7.Scaling and Parallel Processing
+很多批处理问题都可以通过单进程、单线程的工作模式来完成, 所以在想要做一个复杂设计和实现之前,请审查你是否真的需要那些超级复杂的实现。
+衡量实际作业(job)的性能,看看最简单的实现是否能满足需求: 即便是最普通的硬件,也可以在一分钟内读写上百MB数据文件。
 
-Many batch processing problems can be solved with single threaded, single process jobs, so it is always a good idea to properly check if that meets your needs before thinking about more complex implementations. Measure the performance of a realistic job and see if the simplest implementation meets your needs first: you can read and write a file of several hundred megabytes in well under a minute, even with standard hardware.
+当你准备使用并行处理技术来实现批处理作业时,Spring Batch提供一系列选择,本章将对他们进行讲述,虽然某些功能不在本章中涵盖。从高层次的抽象角度看，并行处理有两种模式: 单进程,多线程模式; 或者多进程模式。还可以将他分成下面这些种类:
 
-When you are ready to start implementing a job with some parallel processing, Spring Batch offers a range of options, which are described in this chapter, although some features are covered elsewhere. At a high level there are two modes of parallel processing: single process, multi-threaded; and multi-process. These break down into categories as well, as follows:
+- 多线程Step(单个进程)
+- 并行Steps(单个进程)
+- 远程分块Step(多个进程)
+- 对Step分区 (单/多个进程)
 
-- Multi-threaded Step (single process)
-- Parallel Steps (single process)
-- Remote Chunking of Step (multi process)
-- Partitioning a Step (single or multi process)
-- Next we review the single-process options first, and then the multi-process options.
+下面我们先回顾一下单进程方式,然后再看多进程方式.

@@ -1,1 +1,3 @@
-# ItemReaders和ItemWriters
+#ItemReaders和ItemWriters#
+
+All batch processing can be described in its most simple form as reading in large amounts of data, performing some type of calculation or transformation, and writing the result out. Spring Batch provides three key interfaces to help perform bulk reading and writing: **ItemReader**, **ItemProcessor** and **ItemWriter**.
