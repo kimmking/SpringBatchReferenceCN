@@ -17,7 +17,7 @@
 * stormhouse([http://stormhouse.github.io/](http://stormhouse.github.io/))
 * Sean([http://caochengbo.iteye.com](http://caochengbo.iteye.com))
 
-完成百分比：2/17 ~ 11%
+完成百分比：5/17 ~ 29%
 	
 	|章节|页数|   翻译者   | 状态  | 计划完成时间 |
 	
