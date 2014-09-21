@@ -42,7 +42,7 @@ Spring Batch的大大简化批处理提供了实现读者等常见的输入源�
 开始,让我们看看配置文件阅读器阅读一个CSV文件,其内容映射到一个对象,并将生成的对象插入数据库。
 
 本教程下载的源代码
-SpringBatch-CVS演示代码
+[SpringBatch-CVS演示代码](http://images.techhive.com/assets/2014/07/29/osjp-spring-batch-example.zip)
 
 阅读和处理一个CVS文件
 
