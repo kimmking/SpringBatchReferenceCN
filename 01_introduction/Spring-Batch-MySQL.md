@@ -20,7 +20,7 @@
 - 有些定制订单的服务。 你需要在每天晚上执行批处理程序来生成清单文件,并将它们发送到相应的供应商手上。
 
 
-作业与分块: Spring Batch 范例
+## 作业与分块: Spring Batch 范例 ##
 
 Spring Batch 有很多组成部分,我们先来看批量作业中的核心处理。 可以将一个作业分成下面3个不同的步骤:
 
@@ -32,23 +32,22 @@ Spring Batch 有很多组成部分,我们先来看批量作业中的核心处理
 例如,我们可以打开一个CSV格式的数据文件,对文件中的数据执行某些处理,然后将数据写入数据库。 在Spring Batch中, 您需要配置一个读取程序 **reader** 来读取文件中的数据(每次一行), 然后并将每一行数据传递给 **processor** 进行处理, 处理器将会将结果收集并分组为“块 chunks”, 并把这些记录发送给 **writer** ,在这里是插入到数据库中。 可以参考图1所示的周期。
 
 ![Spring Batch批处理的基本逻辑](./fig1-basicl-ogic.png)
-图1 Spring Batch批处理的基本逻辑
+**图1 Spring Batch批处理的基本逻辑**
 
 
-#下面的内容需要整理 wait....
+Spring Batch实现了常见输入源的 readers, 极大地简化了批处理过程.包括 CSV文件, XML文件、数据库、文件中的JSON记录,甚至是 JMS; 同样也实现了对应的 writers。 如有需要,创建自定义的 readers and writers 也是相当简单的。
 
-Spring Batch的大大简化批处理提供了实现读者等常见的输入源的CSV文件,XML文件、数据库、JSON记录中包含一个文件,甚至是JMS以及作家。 这也是相当简单的构建定制的读者和作家如果你需要。
+首先,让我们一起配置一个 file reader 来读取 CSV文件,将其内容映射到一个对象中,并将生成的对象插入数据库中。
 
-开始,让我们看看配置文件阅读器阅读一个CSV文件,其内容映射到一个对象,并将生成的对象插入数据库。
+下载本教程的源代码: 
+[SpringBatch-CVS演示代码](./osjp-spring-batch-example.zip)
 
-本教程下载的源代码
-[SpringBatch-CVS演示代码](http://images.techhive.com/assets/2014/07/29/osjp-spring-batch-example.zip)
 
-阅读和处理一个CVS文件
+## 读取并处理CVS文件 ##
 
-Spring Batch内置的读者, org.springframework.batch.item.file.FlatFileItemReader 解析文件成单个行。 它需要一个参考平面文件资源,跳过的行数的文件(通常是文件头),和一个 行映射器 ,将单个线转换成一个对象。 映射器,需要一个 行编译器 将一条线划分为其组成字段, 字段设置映射器 构建一个对象的字段值。 的配置 FlatFileItemReader 如下所示:
+Spring Batch 内置的reader,  **org.springframework.batch.item.file.FlatFileItemReader** 将文件解析为许多单独的行。 它需要一个纯文本文件的引用,文件开头要忽略的行数(通常是头信息), 以及一个将单行转换为一个对象的 line mapper. 行映射器需要一个分割字符串的分词器,用来将一行划分为各个组成字段, 以及一个field set mapper,根据字段值构建一个对象。  **FlatFileItemReader** 的配置如下所示:
 
-清单1。 一个Spring的批处理配置文件
+**清单1 一个Spring Batch 配置文件**
 
     <bean id="productReader" class="org.springframework.batch.item.file.FlatFileItemReader" scope="step">
 
@@ -74,14 +73,23 @@ Spring Batch内置的读者, org.springframework.batch.item.file.FlatFileItemRea
     </bean>
 
 
-让我们来看看这些组件。 首先,图2显示了它们之间的关系图。
 
-图2。 组件的FlatFileItemReader
+让我们来看看这些组件。 首先,图2显示了它们之间的关系:
+
+
 ![FlatFileItemReader组件](./fig2-FlatFileItemReader.png)
+**图2 FlatFileItemReader的组件**
 
-资源 : 资源 属性定义了文件阅读。 绝对文件中注释掉资源显示路径,这是 sample.csv 在同一个目录中运行批处理作业。 更有趣的条目 InputFile 工作参数: 工作参数 允许您指定在运行时参数影响的工作。 在导入文件的情况下,它是一个非常重要的参数,以解决在运行时,而不是在构建时。 (这将是相当无聊的导入相同的文件一次又一次!)
 
-行不 : linesToSkip 属性告诉文件阅读器有多少领导行文件跳过。 经常CSV文件将包含头信息,如列名称,在文件的第一行,所以在这个例子中,我们告诉读者跳过第一行的文件。
+
+#下面的内容需要整理 wait....
+
+
+
+
+资源 : 资源 属性定义了文件读取。 绝对文件中注释掉资源显示路径,这是 sample.csv 在同一个目录中运行批处理作业。 更有趣的条目 InputFile 工作参数: 工作参数 允许您指定在运行时参数影响的工作。 在导入文件的情况下,它是一个非常重要的参数,以解决在运行时,而不是在构建时。 (这将是相当无聊的导入相同的文件一次又一次!)
+
+行不 : linesToSkip 属性告诉文件读取器有多少领导行文件跳过。 经常CSV文件将包含头信息,如列名称,在文件的第一行,所以在这个例子中,我们告诉读者跳过第一行的文件。
 
 行映射器 : lineMapper 负责个人行一个文件转换成对象。 这取决于两个组件:
 
@@ -742,7 +750,7 @@ java -cp spring-batch-example.jar:./lib/* org.springframework.batch.core.launch.
 
 微线程
 
-将工作划分为组块是一个非常好的战略,嗯,块:阅读项目一个一个,处理它们,然后把它们写在一块。 线性操作,但是如果你有一个你想执行需要执行一次? 在这种情况下,你可以建立一个 微 。 微线程可以做任何你需要做的! 例如,它可以从一个FTP站点下载一个文件,解压缩或解密文件,或调用一个web服务来确定是否已经批准执行文件处理。 这里的基本过程建立一个微线程:
+将工作划分为组块是一个非常好的战略,嗯,块:读取项目一个一个,处理它们,然后把它们写在一块。 线性操作,但是如果你有一个你想执行需要执行一次? 在这种情况下,你可以建立一个 微 。 微线程可以做任何你需要做的! 例如,它可以从一个FTP站点下载一个文件,解压缩或解密文件,或调用一个web服务来确定是否已经批准执行文件处理。 这里的基本过程建立一个微线程:
 
 
 定义一个类实现 org.springframework.batch.core.step.tasklet.Tasklet 。
@@ -902,7 +910,7 @@ Spring Batch的工作弹性给你三个工具:
 
 ##总结##
 
-一些业务问题最好的解决方法是使用批处理和Spring batch实现批处理作业提供了一个框架。 Spring Batch定义了一个分块模式有三个阶段:阅读、过程,和写作,以及对阅读和写作常见的资源支持。 这一期的 开源Java项目 系列探讨了Spring Batch做什么以及如何使用它。
+一些业务问题最好的解决方法是使用批处理和Spring batch实现批处理作业提供了一个框架。 Spring Batch定义了一个分块模式有三个阶段:读取、过程,和写作,以及对读取和写作常见的资源支持。 这一期的 开源Java项目 系列探讨了Spring Batch做什么以及如何使用它。
 
 我们开始通过构建一个简单的工作,产品从CSV文件导入到数据库,然后扩展,通过添加一个处理器工作管理产品数量。 最后,我们写了一个单独的微档案输入文件。 虽然不是示例的一部分,Spring Batch的弹性特性很重要,所以我很快了三个弹性Spring Batch提供工具:跳过的记录,重新尝试记录,和重新启动批处理作业。
 
