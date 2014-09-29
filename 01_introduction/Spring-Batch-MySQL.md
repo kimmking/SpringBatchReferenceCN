@@ -81,28 +81,27 @@ Spring Batch 内置的reader,  **org.springframework.batch.item.file.FlatFileIte
 **图2 FlatFileItemReader的组件**
 
 
+**Resources:**  *resource* 属性指定了要读取的文件。 注释掉的 resource 使用了文件的相对路径,也就是批处理作业工作目录下的 *sample.csv* 。 作业参数 *InputFile* 就更可爱了: job parameters允许在运行时动态指定相关参数。 在使用 import 文件的情况下,在运行时才决定使用哪个参数比起在编译时就固定要灵活好用得多。 (如果要一遍又一遍,五六七八遍导入同一个文件时又会相当的无聊了!)
 
-#下面的内容需要整理 wait....
+**Lines to skip:** *linesToSkip* 属性告诉 file reader 有多少标题行需要跳过。 CSV文件经常包含标题信息,如列名称,在文件的第一行,所以在本例中,我们让reader 跳过文件的第一行。
 
 
+**Line mapper:**   *lineMapper* 负责将每行记录转换成一个对象。 需要依赖两个组件:
 
 
-资源 : 资源 属性定义了文件读取。 绝对文件中注释掉资源显示路径,这是 sample.csv 在同一个目录中运行批处理作业。 更有趣的条目 InputFile 工作参数: 工作参数 允许您指定在运行时参数影响的工作。 在导入文件的情况下,它是一个非常重要的参数,以解决在运行时,而不是在构建时。 (这将是相当无聊的导入相同的文件一次又一次!)
+- *LineTokenizer* 指定了如何将一行拆分为多个字段。 本例中我们列出了CSV文件中的列名。
 
-行不 : linesToSkip 属性告诉文件读取器有多少领导行文件跳过。 经常CSV文件将包含头信息,如列名称,在文件的第一行,所以在这个例子中,我们告诉读者跳过第一行的文件。
+- *fieldSetMapper* 从字段值构造一个对象。 在我们的例子中构建了一个 Product对象,属性包括  id, name, description, 以及 quantity 字段。
 
-行映射器 : lineMapper 负责个人行一个文件转换成对象。 这取决于两个组件:
+请注意,虽然Spring Batch为我们提供的基础框架,但我们仍需要设置字段映射的逻辑。 清单2显示了 *Product* 对象的源码,也就是我们准备构建的对象。
 
-LineTokenizer 定义了如何打破排队到令牌。 在我们的例子中我们列表的名字列在CSV文件中。
-fieldSetMapper 构建一个对象的字段值。 在我们的例子中我们建立一个 产品 对象的 ID , 的名字 , 描述 , 数量 字段。
-注意,Spring Batch为我们提供了基础设施,但我们仍然负责该领域的逻辑映射器。 清单2显示了的源代码 产品 对象,该对象我们建筑。
 
-清单1。 Product.java
+**清单2 Product.java**
 
 	package com.geekcap.javaworld.springbatchexample.simple.model;
 
 	/**
-	 * Simple POJO to represent a product
+	 * 代表产品的简单值对象(POJO)
 	 */
 	public class Product
 	{
@@ -155,11 +154,10 @@ fieldSetMapper 构建一个对象的字段值。 在我们的例子中我们建�
 	}
 
 
-的 产品 类是一个简单的POJO,包装我们的4个字段。 清单2显示了的源代码 ProductFieldSetMapper 类。
+Product 类是一个简单的POJO,包含4个字段。 清单3显示了 *ProductFieldSetMapper* 类的源代码。
 
 
-
-清单2。 ProductFieldSetMapper.java
+**清单3 ProductFieldSetMapper.java**
 
 
 	package com.geekcap.javaworld.springbatchexample.simple.reader;
@@ -170,7 +168,7 @@ fieldSetMapper 构建一个对象的字段值。 在我们的例子中我们建�
 	import org.springframework.validation.BindException;
 	
 	/**
-	 * Builds a Product from a row in the CSV file (as a set of fields)
+	 * 根据 CSV 文件中的字段集合构建  Product 对象
 	 */
 	public class ProductFieldSetMapper implements FieldSetMapper<Product>
 	{
@@ -186,13 +184,17 @@ fieldSetMapper 构建一个对象的字段值。 在我们的例子中我们建�
 	}
 
 
-的 ProductFieldSetMapper 类继承了 fieldSetMapper ,它定义了一个方法: mapFieldSet() 。 一旦行映射器解析成单独的字段,它构建一个 自定义字段 ,其中包含命名字段,通过的 mapFieldSet() 方法。 该方法负责建立一个CSV文件中的对象来表示行。 在我们的例子中,我们建立一个 产品 通过调用不同的实例 读 的方法 自定义字段 。
+*ProductFieldSetMapper* 类继承自 *fieldSetMapper* ,它只定义了一个方法: *mapFieldSet()*.  mapper映射器将每一行解析成一个 *FieldSet*（包含命名好的字段), 然后传递给 mapFieldSet() 方法。 该方法负责组建一个对象来表示 CSV文件中的一行。 在本例中,我们通过 *FieldSet* 的各种 *read* 方法 构建了一个Product实例.
+
+
+#下面的内容需要整理 wait....
+
 
 写入数据库
 
-之后我们读取的文件,并有一组 产品 年代,下一步是编写数据库。 技术上我们可以连接在一个处理步骤,做了一些数据,但现在我们只写数据到数据库中。 清单3显示了源代码 ProductItemWriter 类。
+之后我们读取的文件,并有一组 产品 年代,下一步是编写数据库。 技术上我们可以连接在一个处理步骤,做了一些数据,但现在我们只写数据到数据库中。 清单4显示了源代码 ProductItemWriter 类。
 
-清单3。 ProductItemWriter.java
+清单4 ProductItemWriter.java
 
 
 	package com.geekcap.javaworld.springbatchexample.simple.writer;
