@@ -1,3 +1,4 @@
 #ItemReaders和ItemWriters#
 
-All batch processing can be described in its most simple form as reading in large amounts of data, performing some type of calculation or transformation, and writing the result out. Spring Batch provides three key interfaces to help perform bulk reading and writing: **ItemReader**, **ItemProcessor** and **ItemWriter**.
+
+所有的批处理都可以描述为最简单的形式： 读取大量的数据, 执行某种类型的计算/转换, 以及写出执行结果. Spring Batch 提供了三个主要接口来辅助执行大量的读取与写出: **ItemReader**, **ItemProcessor** 和 **ItemWriter**.
