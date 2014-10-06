@@ -8,9 +8,12 @@
 编写批处理程序来处理GB级别数据量无疑是种海啸般难以面对的任务,但我们可以用Spring Batch将其拆解为小块小块的(chunk)。 Spring Batch 是Spring框架的一个模块,专门设计来对各种类型的文件进行批量处理。 本文先讲解一个简单的作业 —— 将产品列表从CSV文件中读取出来,然后导入MySQL数据库中; 然后我们一起研究 Spring Batch 模块的批处理功能(/性能),如单/多处理单元(processors), 同时辅以多个微线程(tasklets); 最后简要介绍Spring Batch对跳过记录(skipping), 重试记录(retrying),以及批处理作业的重启(restarting )等弹性工具。
 
 
+
 如果你曾在Java企业系统中用批处理来处理过成千上万的数据交换,那你就知道工作负载是怎么回事。 批处理系统要处理庞大无比的数据量,处理单条记录失败的情况,还要管理中断,在重启动后不要再去处理那些已经执行过的部分。
 
+
 对于没有相关经验的初学者,下面是需要批处理的一些场景,并且如果使用Spring Batch 很可能会节省你很多宝贵的时间:
+
 
 
 - 接收的文件缺少了一部分需要的信息,你需要读取并解析整个文件,调用某个服务来获得缺少的那部分信息,然后写入到某个输出文件,供其他批处理程序使用。
@@ -20,7 +23,9 @@
 - 有些定制订单的服务。 你需要在每天晚上执行批处理程序来生成清单文件,并将它们发送到相应的供应商手上。
 
 
+
 ## 作业与分块: Spring Batch 范例 ##
+
 
 Spring Batch 有很多组成部分,我们先来看批量作业中的核心处理。 可以将一个作业分成下面3个不同的步骤:
 
@@ -31,23 +36,32 @@ Spring Batch 有很多组成部分,我们先来看批量作业中的核心处理
 
 例如,我们可以打开一个CSV格式的数据文件,对文件中的数据执行某些处理,然后将数据写入数据库。 在Spring Batch中, 您需要配置一个读取程序 **reader** 来读取文件中的数据(每次一行), 然后并将每一行数据传递给 **processor** 进行处理, 处理器将会将结果收集并分组为“块 chunks”, 并把这些记录发送给 **writer** ,在这里是插入到数据库中。 可以参考图1所示的周期。
 
+
 ![Spring Batch批处理的基本逻辑](./fig1-basicl-ogic.png)
 **图1 Spring Batch批处理的基本逻辑**
 
 
 Spring Batch实现了常见输入源的 readers, 极大地简化了批处理过程.包括 CSV文件, XML文件、数据库、文件中的JSON记录,甚至是 JMS; 同样也实现了对应的 writers。 如有需要,创建自定义的 readers and writers 也是相当简单的。
 
+
+
 首先,让我们一起配置一个 file reader 来读取 CSV文件,将其内容映射到一个对象中,并将生成的对象插入数据库中。
+
+
 
 下载本教程的源代码: 
 [SpringBatch-CVS演示代码](./osjp-spring-batch-example.zip)
 
 
+
 ## 读取并处理CVS文件 ##
+
 
 Spring Batch 内置的reader,  **org.springframework.batch.item.file.FlatFileItemReader** 将文件解析为许多单独的行。 它需要一个纯文本文件的引用,文件开头要忽略的行数(通常是头信息), 以及一个将单行转换为一个对象的 line mapper. 行映射器需要一个分割字符串的分词器,用来将一行划分为各个组成字段, 以及一个field set mapper,根据字段值构建一个对象。  **FlatFileItemReader** 的配置如下所示:
 
+
 **清单1 一个Spring Batch 配置文件**
+
 
     <bean id="productReader" class="org.springframework.batch.item.file.FlatFileItemReader" scope="step">
 
@@ -74,26 +88,40 @@ Spring Batch 内置的reader,  **org.springframework.batch.item.file.FlatFileIte
 
 
 
+
 让我们来看看这些组件。 首先,图2显示了它们之间的关系:
+
+
 
 
 ![FlatFileItemReader组件](./fig2-FlatFileItemReader.png)
 **图2 FlatFileItemReader的组件**
 
 
+
+
 **Resources:**  *resource* 属性指定了要读取的文件。 注释掉的 resource 使用了文件的相对路径,也就是批处理作业工作目录下的 *sample.csv* 。 作业参数 *InputFile* 就更可爱了: job parameters允许在运行时动态指定相关参数。 在使用 import 文件的情况下,在运行时才决定使用哪个参数比起在编译时就固定要灵活好用得多。 (如果要一遍又一遍,五六七八遍导入同一个文件时又会相当的无聊了!)
 
+
+
 **Lines to skip:** *linesToSkip* 属性告诉 file reader 有多少标题行需要跳过。 CSV文件经常包含标题信息,如列名称,在文件的第一行,所以在本例中,我们让reader 跳过文件的第一行。
+
 
 
 **Line mapper:**   *lineMapper* 负责将每行记录转换成一个对象。 需要依赖两个组件:
 
 
+
 - *LineTokenizer* 指定了如何将一行拆分为多个字段。 本例中我们列出了CSV文件中的列名。
+
 
 - *fieldSetMapper* 从字段值构造一个对象。 在我们的例子中构建了一个 Product对象,属性包括  id, name, description, 以及 quantity 字段。
 
+
+
 请注意,虽然Spring Batch为我们提供的基础框架,但我们仍需要设置字段映射的逻辑。 清单2显示了 *Product* 对象的源码,也就是我们准备构建的对象。
+
+
 
 
 **清单2 Product.java**
@@ -154,10 +182,15 @@ Spring Batch 内置的reader,  **org.springframework.batch.item.file.FlatFileIte
 	}
 
 
+
+
 Product 类是一个简单的POJO,包含4个字段。 清单3显示了 *ProductFieldSetMapper* 类的源代码。
 
 
+
+
 **清单3 ProductFieldSetMapper.java**
+
 
 
 	package com.geekcap.javaworld.springbatchexample.simple.reader;
@@ -184,17 +217,21 @@ Product 类是一个简单的POJO,包含4个字段。 清单3显示了 *ProductF
 	}
 
 
+
 *ProductFieldSetMapper* 类继承自 *fieldSetMapper* ,它只定义了一个方法: *mapFieldSet()*.  mapper映射器将每一行解析成一个 *FieldSet*（包含命名好的字段), 然后传递给 mapFieldSet() 方法。 该方法负责组建一个对象来表示 CSV文件中的一行。 在本例中,我们通过 *FieldSet* 的各种 *read* 方法 构建了一个Product实例.
 
 
-#下面的内容需要整理 wait....
+
+## 写入数据库 ##
 
 
-写入数据库
 
-之后我们读取的文件,并有一组 产品 年代,下一步是编写数据库。 技术上我们可以连接在一个处理步骤,做了一些数据,但现在我们只写数据到数据库中。 清单4显示了源代码 ProductItemWriter 类。
+在读取文件之后,我们得到了一组 `Product` ,下一步就是将其写入数据库。 技术上允许我们将这些数据连接到一个 processing  step,对数据做一些处理之类的,为简单起见,我们只将数据写到数据库中。 清单4显示了 **ProductItemWriter** 类的源代码。
 
-清单4 ProductItemWriter.java
+
+
+**清单4 `ProductItemWriter.java`**
+
 
 
 	package com.geekcap.javaworld.springbatchexample.simple.writer;
@@ -251,19 +288,30 @@ Product 类是一个简单的POJO,包含4个字段。 清单3显示了 *ProductF
 	}
 
 
-的 ProductItemWriter 类继承了 ItemWriter 并实现其单一的方法: write() 。 的 write() 方法接受的列表 产品 年代。Spring Batch实现其作者使用“组块”策略,这意味着当读取一次执行一个项目,分块成组写道。 下面的任务配置定义,您可以完全控制项的数量你想要一起(通过分块 commit-interval )到一个写。 在这个例子中, write() 方法如下:
-
-它执行一个SQL SELECT语句来检索 产品 与指定的 ID 。
-如果选择返回一个项目 write() 执行一个更新来更新数据库记录的新值。
-如果选择不返回一个项目 write() 执行INSERT将产品添加到数据库中。
-的 ProductItemWriter 类使用Spring的 jdbctemplate 中定义的类,它是 中 文件并自动连接到以下 ProductItemWriter 类。 如果你还没有使用 jdbctemplate 类,它是一个“四人帮”的实现 模板设计模式 与数据库进行交互背后的JDBC接口。 代码应该很容易读懂,但是如果你需要更多信息,查看 SpringJdbcTemplate javadoc。
-
-在应用程序上下文文件连接在一起
-
-到目前为止我们已经建立了一个 产品 域对象, ProductFieldSetMapper ,将CSV文件中的一行转换成一个对象,和一个 ProductItemWriter 将对象写入数据库。 现在我们需要配置Spring Batch连接所有这些在一起。 清单4显示了源代码 中 文件,它定义了我们的bean。
 
 
-Listing 4. applicationContext.xml
+**ProductItemWriter** 类继承(extends, 其实继承和实现 implements 没有本质区别.) **ItemWriter** 并实现了其唯一的方法: `write()`. `write()` 方法接受一个泛型继承 `Product` 的 `list` . Spring Batch 使用“chunking”策略实现其 writers , 意思就是读取时是一次执行一个item, 而写入时是将一组数据一块写。 如下面的job配置所示,您可以(通过 `commit-interval`)完全控制每次想要一起写的item的数量。 在上面的例子中, `write()` 方法做了这些事:
+
+
+
+1. 它执行一个 **SQL** `SELECT` 语句来根据指定的 `id` 检索 **Product**.
+2. 如果 `SELECT` 返回一条记录, 则 write() 中执行一个 `update` 使用新value来更新数据库中的记录.
+3. 如果 `SELECT` 没有返回记录, 则 write() 执行 `INSERT` 将产品信息添加到数据库中.
+
+
+
+**ProductItemWriter** 类使用Spring的 `JdbcTemplate`  类,它在  `applicationContext.xml` 文件中定义并通过自动装配机制注入到 **ProductItemWriter** 类。 如果你没有用过 Jdbctemplate 类,可以把它理解为是 JDBC 接口的一个封装. 与数据库进行交互的 [模板设计模式](http://java.dzone.com/articles/design-patterns-template-method) 的实现. 代码应该很容易读懂, 如果你想了解更多信息, 请查看 [SpringJdbcTemplate 的 javadoc](http://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/jdbc/core/JdbcTemplate.html)。
+
+
+
+## 与 application context 文件组装 ##
+
+
+
+到目前为止我们已经建立了一个 `Product`  领域对象, 一个  `ProductFieldSetMapper` 类, 用来将CSV文件中的每一行转换为一个对象,  以及一个 `ProductItemWriter` 类, 来将对象写入数据库。 下面我们需要配置 Spring Batch 来将这些东西组装在一起。  清单5 显示了  `applicationContext.xml` 文件的源代码, 这里面定义了我们需要的bean。
+
+
+**清单 5. `applicationContext.xml`**
 
 
 	<?xml version="1.0" encoding="UTF-8"?>
@@ -355,25 +403,35 @@ Listing 4. applicationContext.xml
 	</beans>
 
 
-注意,将我们的工作从我们的应用程序/配置环境配置使我们能够将工作从一个环境移动到另一个没有重新定义工作。 下面的清单4中定义bean:
+注意,将 job 配置从 application/environment 中分离出来使我们能够将 job 从一个环境移到另一个环境 而不需要重新定义一个 job。 清单5中定义了下面这些bean:
 
-数据源 :样例应用程序连接到MySQL,数据源配置为连接到一个MySQL数据库命名 spring_batch_example 在本地主机上运行设置说明(见下文)。
-transactionmanager :Spring事务管理器是用于管理MySQL的事务。
-jdbctemplate :这类提供了模板设计模式的实现与JDBC连接交互。 这是一个助手类来简化我们的数据库集成。 在生产应用程序中我们可能会选择使用ORM工具Hibernate等在服务层,但我想保持尽可能简单的例子。
-jobrepository : MapJobRepositoryFactoryBean 是一个Spring Batch组件,管理工作的状态。 在这种情况下它存储工作到MySQL数据库使用前面配置的信息 jdbctemplate 。
-jobLauncher :这是组件,启动和管理工作流的Spring的批处理作业。
-productReader :这个bean执行读操作在我们的工作。
-productWriter :这个bean写道 产品 到数据库实例。
-注意, jdbc:initialize-database 节点指向两个Spring Batch的脚本创建数据库表来支持运行批处理作业。 这些脚本位于Spring Batch核心JAR文件(由Maven自动进口)在指定的路径。 JAR文件包含脚本为各种数据库供应商,包括MySQL、Oracle、SQL Server,等等。 这些脚本创建的模式运行时使用工作。 在这个例子中它滴,然后创建表,你可以做一个临时运行。 在生产环境中你可以自己提取SQL文件和创建表——在这种情况下,你可以让他们永远在。
+- **dataSource** : 示例程序连接到MySQL,所以数据库连接池配置为连接到一个名为 `spring_batch_example` 的MySQL数据库，地址为本机(localhost),具体设置参见下文。
 
-#懒惰在Spring Batch范围
-你可能已经注意到 productReader bean定义为一个“步骤”范围。 的 一步 范围是Spring框架范围之一,特定于Spring Batch。 它本质上是一个 懒惰的范围 告诉Spring创建bean首次访问时。 在这种情况下,我们需要选择一步因为资源使用的工作参数范围的“ InputFile “价值,将不会创建应用程序上下文时可用。 使用步骤使Spring Batch能够接收范围” InputFile “价值并使其创建bean时可用。
+- **transactionmanager** : Spring事务管理器, 用于管理MySQL事务。
 
-定义工作
+- **jdbctemplate** : 该类提供了与JDBC connections交互的模板设计模式实现。 这是一个 Helper 类,用来简化我们使用数据库。 在实际的项目中一般会使用某种ORM工具, 例如Hibernate,上面再包装一个服务层, 但本示例中我想让它尽可能地简单。
 
-清单5显示了 file-import-job.xml 文件,它定义了实际工作。
+- **jobrepository** : `MapJobRepositoryFactoryBean` 是 Spring Batch 管理 job 状态的组件。 在这里它使用前面配置的 jdbctemplate 将 job 信息存储到MySQL数据库中。
 
-清单5。 file-import-job.xml
+- **jobLauncher** : 这是启动和管理 Spring Batch 作业工作流的组件,。
+
+- **productReader** : 在job中这个 bean 负责执行读操作。
+
+- **productWriter** : 这个bean 负责将 `Product` 实例写入数据库。
+
+请注意, `jdbc:initialize-database` 节点包含了两个用来创建所需数据库表的Spring Batch 脚本。 这些脚本我文件位于 Spring Batch core 的JAR文件中(由Maven自动引入了)对应的路径下。 JAR文件中包含了许多数据库对应的脚本, 比如MySQL、Oracle、SQL Server,等等。 这些脚本负责在运行 job 时创建需要的schema。 在本示例中,它删除(drop)表,然后再创建(create)表, 你可以试着运行一下。 如果在生产环境中, 你应该将SQL文件提取出来,然后手动执行 —— 毕竟生产环境一般创建了就不会删除。
+
+
+##
+**Spring Batch 中的 Lazy scope**
+
+你可能已经注意到 `productReader` 这个bean 指定了为一个值为“`step`”的 `scope` 属性。 `step scope` 是Spring框架的 作用域之一, 主要用于 Spring Batch。 它本质上是一个 *lazy scope*, 告诉Spring在首次访问时才创建bean。 在本例中, 我们需要使用 step scope 是因为使用了 job 参数的 "`InputFile`" 值, 这个值在应用程序启动时是不存在的。 使用 step scope 使Spring Batch在创建这个 bean 时能够找到 "`InputFile`" 值。
+
+## 定义job ##
+
+清单6显示了 `file-import-job.xml` 文件, 该文件定义了实际的 job 作业。
+
+**清单6 `file-import-job.xml`**
 
 
 	<?xml version="1.0" encoding="UTF-8"?>
@@ -400,11 +458,68 @@ productWriter :这个bean写道 产品 到数据库实例。
 	</beans>
 
 
-请注意, 工作 可以包含零个或多个步骤; 一步 可以包含零个或一个微; 微 可以包含零个或一块,如图3中以图形的方式说明了。
 
-图3。 工作,步骤、微线程和块
+
+请注意, 一个 job 可以包含 0 到 多个 step; 一个 step 可以包含 0 到 多个 tasklet; 一个 tasklet 可以包含 0 到多个 chunk, 如图3所示。
+
+
+
+
+
+
+
+
+
+**图3 Jobs, steps, tasklets 和 chunks的关系**
+
+
 
 ![ Jobs, steps, tasklets, and chunks](./fig3-chunks.png)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##下面的内容需要整理 wait....
+
+
 
 在我们的示例中, simpleFileImportJob 包含一个单步命名 importFileStep 。 的 importFileStep 包含一块包含一个不知名的微线程。 块是我们配置一个引用 productReader 和 productWriter 。 它定义了一个 commit-interval 5,这意味着它将作者5记录一次。 一步将读取5个产品使用 productReader 然后通过这些产品 productWriter 写出来。 这个查克重复,直到耗尽所有的数据。
 
