@@ -421,8 +421,6 @@ Product 类是一个简单的POJO,包含4个字段。 清单3显示了 *ProductF
 
 请注意, `jdbc:initialize-database` 节点包含了两个用来创建所需数据库表的Spring Batch 脚本。 这些脚本我文件位于 Spring Batch core 的JAR文件中(由Maven自动引入了)对应的路径下。 JAR文件中包含了许多数据库对应的脚本, 比如MySQL、Oracle、SQL Server,等等。 这些脚本负责在运行 job 时创建需要的schema。 在本示例中,它删除(drop)表,然后再创建(create)表, 你可以试着运行一下。 如果在生产环境中, 你应该将SQL文件提取出来,然后手动执行 —— 毕竟生产环境一般创建了就不会删除。
 
-
-##
 **Spring Batch 中的 Lazy scope**
 
 你可能已经注意到 `productReader` 这个bean 指定了为一个值为“`step`”的 `scope` 属性。 `step scope` 是Spring框架的 作用域之一, 主要用于 Spring Batch。 它本质上是一个 *lazy scope*, 告诉Spring在首次访问时才创建bean。 在本例中, 我们需要使用 step scope 是因为使用了 job 参数的 "`InputFile`" 值, 这个值在应用程序启动时是不存在的。 使用 step scope 使Spring Batch在创建这个 bean 时能够找到 "`InputFile`" 值。
@@ -432,7 +430,6 @@ Product 类是一个简单的POJO,包含4个字段。 清单3显示了 *ProductF
 清单6显示了 `file-import-job.xml` 文件, 该文件定义了实际的 job 作业。
 
 **清单6 `file-import-job.xml`**
-
 
 	<?xml version="1.0" encoding="UTF-8"?>
 	<beans xmlns="http://www.springframework.org/schema/beans"
@@ -458,21 +455,9 @@ Product 类是一个简单的POJO,包含4个字段。 清单3显示了 *ProductF
 	</beans>
 
 
-
-
 请注意, 一个 job 可以包含 0 到 多个 step; 一个 step 可以包含 0 到 多个 tasklet; 一个 tasklet 可以包含 0 到多个 chunk, 如图3所示。
 
-
-
-
-
-
-
-
-
 **图3 Jobs, steps, tasklets 和 chunks的关系**
-
-
 
 ![ Jobs, steps, tasklets, and chunks](./fig3-chunks.png)
 
@@ -480,58 +465,20 @@ Product 类是一个简单的POJO,包含4个字段。 清单3显示了 *ProductF
 
 
 
+在我们的示例中, **simpleFileImportJob** 包含一个名为 `importFileStep` 的step。 **importFileStep** 包含一个未命名的 tasklet, tasklet又包含有一个 chunk。 chunk 引用了 `productReader` 和 `productWriter` 。 同时指定了一个属性 **commit-interval**, 值为 `5` . 意思是每5条记录就调用一次 writer。 该 step 利用 `productReader` 一次读取5条产品记录，然后将这些记录传递给 `productWriter` 写出。 这一块一直重复执行, 直到所有数据都处理完成为止。
 
 
 
+清单6 还还引入了 `applicationContext.xml` 文件,该文件包含所有需要的bean。 而 Jobs 通常在单独的文件中定义; 这是因为 job 加载器在执行时需要一个 job 文件以及对应的 job name。 虽然可以讲所有的东西揉进一个文件中,但很快变得臃肿难以维护,所以一般约定, 一个 job 定义在一个文件中, 同时引入所有依赖文件。
+
+最后,你可能会注意到,job 节点 上定义了XML名称空间( `xmlns` ) 。 这样做是为了不想在每个节点上再加上前缀 "`batch:`"。  在节点级别定义的 namespace 会在该节点和所有子节点上生效。
+
+**构建项目**
+
+清单7显示了构建此示例项目的POM文件的内容
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-##下面的内容需要整理 wait....
-
-
-
-在我们的示例中, simpleFileImportJob 包含一个单步命名 importFileStep 。 的 importFileStep 包含一块包含一个不知名的微线程。 块是我们配置一个引用 productReader 和 productWriter 。 它定义了一个 commit-interval 5,这意味着它将作者5记录一次。 一步将读取5个产品使用 productReader 然后通过这些产品 productWriter 写出来。 这个查克重复,直到耗尽所有的数据。
-
-清单5还进口了 中 文件,其中包含我们所有的bean。 工作通常在单独的文件中定义;这是因为发射器的工作需要一个工作文件和工作名称时执行。 一切可以被定义在一个文件中,但是它会很快变得笨拙,所以作为一个约定,一个文件中定义的工作是和进口所有依赖文件。
-
-最后,你可能会注意到,XML名称空间( XMLNS )内的定义 工作 节点。 我们这么做,这样我们不需要序言每个节点” 批处理: 。 “定义名称空间在节点级别影响节点定义它和所有的子节点。
-
-构建项目
-
-清单6显示了POM文件的内容,构建此示例项目。
-
-Listing 6. pom.xml
+**清单7 `pom.xml`**
 
 
 	<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -656,6 +603,8 @@ Listing 6. pom.xml
 	</project>
 
 
+
+##下面的内容需要整理 wait....
 
 POM文件导入Spring的背景下,核心,豆类,和JDBC包,然后进口Spring Batch的核心和基础设施的包。 这些依赖项设置弹簧和弹簧的批处理。 也导入Apache DBCP依赖使我们能够建立一个数据库连接池和MySQL驱动程序。 插件部分定义了构建使用Java 1.6和配置构建将所有依赖项复制到 自由 目录中。 使用下面的命令来构建项目:
 
