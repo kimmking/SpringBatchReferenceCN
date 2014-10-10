@@ -685,21 +685,15 @@ Spring Batch 可以连接到任何你喜欢的数据库, 但为了演示方便, 
 	INFO: Destroying singletons in org.springframework.beans.factory.support.DefaultListableBeanFactory@6aba4211: defining beans [org.springframework.context.annotation.internalConfigurationAnnotationProcessor,org.springframework.context.annotation.internalAutowiredAnnotationProcessor,org.springframework.context.annotation.internalRequiredAnnotationProcessor,org.springframework.context.annotation.internalCommonAnnotationProcessor,dataSource,transactionManager,jdbcTemplate,jobRepository,jobLauncher,productReader,productWriter,org.springframework.batch.core.scope.internalStepScope,org.springframework.beans.factory.config.CustomEditorConfigurer,org.springframework.batch.core.configuration.xml.CoreNamespacePostProcessor,importFileStep,simpleFileImportJob,org.springframework.context.annotation.ConfigurationClassPostProcessor.importAwareProcessor,scopedTarget.productReader]; root of factory hierarchy
 
 
-
 然后到数据库中检测一下 **PRODUCT** 表中是否正确保存了我们在 csv中指定的那几条记录(示例是8条)。
 
+## 对 Spring Batch 执行批量处理 ##
 
+到这一步, 我们的示例程序已经从CSV文件中读取数据,并将信息导入到了数据库中。 虽然可以运行起来, 但有时候想要对数据进行转换或着过滤掉某些数据,然后再插入到数据库中。 在本节中,我们将创建一个简单的 processor , 并不覆盖原有的 product 数量,而是先从数据库中查询现有记录, 然后将CSV文件中对应的数量添加到 product 中, 然后再写入数据库。
 
-##下面的内容需要整理 wait....
+清单8显示了 **ProductItemProcessor** 类的源代码。
 
-
-## 与Spring Batch的批处理 ##
-
-此时,例子从CSV文件中读取数据,并将该信息导入到数据库中。 虽然这是有用的,很有可能你会有时候想改变或过滤数据之前将它插入到数据库中。 在本节中,我们将构建一个简单的处理器,而不是覆盖产品的数量,而不是从数据库中检索现有记录,然后将CSV文件中的数量添加到产品之前的作家。
-
-清单7显示了的源代码 ProductItemProcessor 类。
-
-清单7。 ProductItemProcessor.java
+**清单8 `ProductItemProcessor.java`**
 
 
 	package com.geekcap.javaworld.springbatchexample.simple.processor;
@@ -752,16 +746,16 @@ Spring Batch 可以连接到任何你喜欢的数据库, 但为了演示方便, 
 	}
 
 
-项处理器实现的接口 ItemProcessor < I,O > ,在那里 我 类型的对象发送到处理器和 O 返回的是对象的类型的处理器。 在这个例子中,我们通过在一个 产品 然后返回一个 产品 。 的 ItemProcessor 定义了一个方法: 过程() ,我们执行 选择 查询检索 产品 与指定的 ID 从数据库中。 如果 产品 发现,将现有的吗 产品 数量的新数量。
+`ProductItemProcessor` 实现的接口 `ItemProcessor<I,O>` , 其中类型 **I** 表示传递给处理器的对象类型, 而 **O** 则表示处理器返回的对象类型。 在本例中,我们传入一个 `Product` 对象,返回的也是一个 Product 对象。 **ItemProcessor** 接口只定义了一个方法: `process()` , 在里面我们根据给定的 `id` 执行一条 **SELECT** 语句从数据库中获取对应的 `Product` 。 如果找到 `Product`对象 ,则将该对象的数量加上新的数量。
 
-这个处理器并不做任何过滤,但如果 过程() 方法返回 空 Spring Batch会忽略这个项目从列表中被发送到作家。
+processor 没有做任何过滤,但如果 `process()` 方法返回 `null`, 则Spring Batch 将会忽略这个 item, 不将其发送给 writer.
 
-连接到工作非常简单。 首先,添加一个新的bean 中 文件:
+将 processor 组装到 job 中是非常简单的。 首先,添加一个新的bean 到 `applicationContext.xml` 文件中:
 
 
 	<bean id="productProcessor" class="com.geekcap.javaworld.springbatchexample.simple.processor.ProductItemProcessor" />
 
-接下来,引用的 块 随着 处理器 :
+接下来,在 `chunk` 中通过 `processor` 属性来引用这个 bean:
 
 
 
@@ -774,19 +768,20 @@ Spring Batch 可以连接到任何你喜欢的数据库, 但为了演示方便, 
     </job>
 
 
-建立和执行工作,您应该看到数据库中的产品数量增加每次运行该批处理作业。
+编译并执行 job, 如果不出错, 就可以在数据库中看到产品的数量发生了变化。
 
-建立多个处理器
-
-我们定义一个处理器,但在某种情况下,您可能想要建立几个finely-grained条目处理器和执行都先后在同一块。 例如,您可能有一个过滤器来跳过项不存在于数据库和一个处理器,正确地管理项目数量。 如果是这种情况,那么您可以使用Spring Batch的 CompositeItemProcessor 。 流程如下:
-
-	构建处理器类
-	在你定义处理器bean 中 文件
-	定义一个类型的bean org.springframework.batch.item.support.CompositeItemProcessor 并设置其 代表 到你想执行的处理器bean列表
-	定义 块 的 处理器 引用 CompositeItemProcessor
+## 创建多个processors ##
 
 
-考虑到我们有一个假设 ProductFilterProcessor ,我们可以写流程如下:
+前面我们定义了单个处理器,但某些情况下可能想要以适当的粒度来创建多个 item processor，然后按顺序在同一个 chunk之中执行. 例如,可能需要一个过滤器来跳过数据库中不存在的记录,还需要一个 processor 来正确地管理 item 数量。 这时候, 我们可以使用Spring Batch中的 `CompositeItemProcessor` 来大显身手. 使用步骤如下:
+
+1. 创建 processor 类
+2. 在applicationContext.xml中配置 bean
+3. 定义一个类型为 `org.springframework.batch.item.support.CompositeItemProcessor` 的 bean,然后将其 `delegates` 设置为你想执行的处理器bean的 list
+4. 让 `chunk` 的 `processor` 属性引用 `CompositeItemProcessor`
+
+
+假设我们有一个 `ProductFilterProcessor` , 则可以像下面这样指定 process :
 
 	<bean id="productFilterProcessor" class="com.geekcap.javaworld.springbatchexample.simple.processor.ProductFilterItemProcessor" />
 	
@@ -802,7 +797,7 @@ Spring Batch 可以连接到任何你喜欢的数据库, 但为了演示方便, 
 	</bean>
 
 
-然后只需修改工作配置,如:
+然后只需修改一下 job 配置即可,如下所示:
 
     <job id="simpleFileImportJob" xmlns="http://www.springframework.org/schema/batch">
         <step id="importFileStep">
@@ -813,7 +808,9 @@ Spring Batch 可以连接到任何你喜欢的数据库, 但为了演示方便, 
     </job>
 
 
-微线程
+## 下面的内容还需要整理
+
+## Tasklets ##
 
 将工作划分为组块是一个非常好的战略,嗯,块:读取项目一个一个,处理它们,然后把它们写在一块。 线性操作,但是如果你有一个你想执行需要执行一次? 在这种情况下,你可以建立一个 微 。 微线程可以做任何你需要做的! 例如,它可以从一个FTP站点下载一个文件,解压缩或解密文件,或调用一个web服务来确定是否已经批准执行文件处理。 这里的基本过程建立一个微线程:
 
