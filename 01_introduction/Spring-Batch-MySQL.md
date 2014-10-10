@@ -473,7 +473,7 @@ Product 类是一个简单的POJO,包含4个字段。 清单3显示了 *ProductF
 
 最后,你可能会注意到,job 节点 上定义了XML名称空间( `xmlns` ) 。 这样做是为了不想在每个节点上再加上前缀 "`batch:`"。  在节点级别定义的 namespace 会在该节点和所有子节点上生效。
 
-**构建项目**
+## 构建并运行项目 ##
 
 清单7显示了构建此示例项目的POM文件的内容
 
@@ -603,23 +603,17 @@ Product 类是一个简单的POJO,包含4个字段。 清单3显示了 *ProductF
 	</project>
 
 
-
-##下面的内容需要整理 wait....
-
-POM文件导入Spring的背景下,核心,豆类,和JDBC包,然后进口Spring Batch的核心和基础设施的包。 这些依赖项设置弹簧和弹簧的批处理。 也导入Apache DBCP依赖使我们能够建立一个数据库连接池和MySQL驱动程序。 插件部分定义了构建使用Java 1.6和配置构建将所有依赖项复制到 自由 目录中。 使用下面的命令来构建项目:
-
+上面的POM文件先引入了 Spring context, core, beans, 和 JDBC 框架/类库， 然后引入 Spring Batch core 以及 infrastructure 依赖(包)。 这些依赖项就是 Spring 和 Spring Batch的基础。 当然也引入了 Apache DBCP, 使我们能构建数据库连接池和MySQL驱动。  `plug-in` 部分指定了使用Java 1.6进行编译,并在 build 时将所有依赖项库复制到 lib 目录下。 我们可以使用下面的命令来构建项目:
 
 	mvn clean install
 
+## Spring Batch连接到一个数据库 ##
 
+现在我们的 job 已经设置好了, 如果想在生产环境中运行还需要将Spring Batch连接到数据库。 Spring Batch 需要一些表, 用来记录 job 的当前状态和已经处理过的 record 列表。 这样,如果某个 job 确实需要重启, 则可以从上次断开的地方继续执行。
 
-Spring Batch连接到一个数据库
+Spring Batch 可以连接到任何你喜欢的数据库, 但为了演示方便, 我们在本示例中使用MySQL。 请 [下载MySQL](http://www.mysql.com/) 并安装后再执行下面的脚本。 社区版是免费的,而且能满足大多数人的需要。 请根据你的操作系统选择合适的版本下载安装. 然后可能需要手动启动MySQL(Windows 一般自动启动)。
 
-你的工作是设置但你需要将Spring Batch连接到数据库,如果你想在生产环境中运行它。 Spring Batch维护一组表,用于记录工作的当前状态和记录处理。 这样,如果一份工作确实需要重新启动,它可以继续从那里离开。
-
-你可以将Spring Batch连接到任何你喜欢的数据库,但对于本演示,我们将使用MySQL。 请 下载MySQL 遵循的例子。 社区版是免费的,并将满足您的需要。 检查你的操作系统的安装说明的环境中运行。
-
-一旦你MySQL建立你需要创建数据库和用户权限与数据库进行交互。 从命令行启动 MySQL 从MySQL的bin目录并执行以下命令(请注意,您可能需要执行 MySQL 作为根用户或使用 SUDO 根据您的操作系统):
+安装好MySQL后还需要创建数据库以及相应的用户(并赋予权限)。 启动命令行并进入MySQL的bin目录启动 mysql 客户端，连接服务器后执行以下SQL命令(请注意,在Linux下可能需要使用 `root` 用户执行 `mysql` 客户端程序, 或者使用 `sudo` 进行权限切换.
 
 
 	create database spring_batch_example;
@@ -627,9 +621,9 @@ Spring Batch连接到一个数据库
 	grant all on spring_batch_example.* to 'sbe'@'localhost';
 
 
-第一行创建一个新的数据库命名 spring_batch_example 将保持你的产品。 第二行创建一个用户 sbE ( Spring Batch的例子 )和密码 sbE 。 最后一行上的所有权限 spring_batch_example 数据库的 sbE 用户。
+第一行SQL创建了一个名为 `spring_batch_example` 的数据库(database), 这个库用来保存我们的 products 信息。 第二行创建了一个名为 `sbe` 的用户 Spring Batch Example的缩写,你也可以使用其他名字,只要配置得一致就行), 密码 也指定为 `sbe`。 最后一行将 `spring_batch_example` 数据库上的所有权限赋予 `sbe ` 用户。
 
-接下来,创建 产品 表使用下面的命令:
+接下来,使用下面的命令创建 **PRODUCT** 表:
 
 
 	CREATE TABLE PRODUCT (
@@ -641,7 +635,7 @@ Spring Batch连接到一个数据库
 	);
 
 
-现在创建一个文件命名 sample.csv 在您的项目的目标目录下面的数据:
+接着,我们在项目的 target 目录下创建一个文件 `sample.csv`, 并填充一些数据(用英文逗号分隔):
 
 
 	id,name,description,quantity
@@ -655,14 +649,15 @@ Spring Batch连接到一个数据库
 	8,Product Eight,This is product 8, 90
 
 
-批处理作业可以推出:
---
-java -cp spring-batch-example.jar:./lib/* org.springframework.batch.core.launch.support.CommandLineJobRunner classpath:/jobs/file-import-job.xml simpleFileImportJob inputFile=sample.csv
---
+可以使用下面的命令启动 batch job:
 
-的 CommandLineJobRunner 类是一个Spring Batch类执行工作。 它需要的XML文件的名称,包含工作,工作执行的名称,选择任何工作参数,您想要发送。 因为 file-import-job.xml 内部文件的JAR文件,它可以访问如下: 类路径:/ / file-import-job.xml工作 。 我们想要执行的工作 simpleFileImportJob 并通过一个工作参数命名 InputFile 的价值 sample.csv 。
 
-亨得利托马斯于下面的输出结果:
+	java -cp spring-batch-example.jar:./lib/* org.springframework.batch.core.launch.support.CommandLineJobRunner classpath:/jobs/file-import-job.xml simpleFileImportJob inputFile=sample.csv
+
+
+`CommandLineJobRunner` 是 Spring Batch 框架中执行 job 的类。 它需要定义了 job的XML文件的名称, 需要执行的job的名称, 以及其他可选的一些自定义参数。 因为 `file-import-job.xml` 在JAR文件的内部, 所以可以使用这种方式访问: `classpath:/jobs/file-import-job.xml`。 我们给需要执行的 Job指定了一个名称  `simpleFileImportJob` 并传入一个参数 `InputFile`, 值为 `sample.csv`。
+
+如果执行不出错, 输出结果类似于下面这样:
 
 	Nov 12, 2013 4:09:17 PM org.springframework.context.support.AbstractApplicationContext prepareRefresh
 	INFO: Refreshing org.springframework.context.support.ClassPathXmlApplicationContext@6b4da8f4: startup date [Tue Nov 12 16:09:17 EST 2013]; root of context hierarchy
@@ -691,10 +686,14 @@ java -cp spring-batch-example.jar:./lib/* org.springframework.batch.core.launch.
 
 
 
+然后到数据库中检测一下 **PRODUCT** 表中是否正确保存了我们在 csv中指定的那几条记录(示例是8条)。
 
-验证 产品 表在数据库中包含八行和他们有正确的值。
 
-与Spring Batch的批处理
+
+##下面的内容需要整理 wait....
+
+
+## 与Spring Batch的批处理 ##
 
 此时,例子从CSV文件中读取数据,并将该信息导入到数据库中。 虽然这是有用的,很有可能你会有时候想改变或过滤数据之前将它插入到数据库中。 在本节中,我们将构建一个简单的处理器,而不是覆盖产品的数量,而不是从数据库中检索现有记录,然后将CSV文件中的数量添加到产品之前的作家。
 
