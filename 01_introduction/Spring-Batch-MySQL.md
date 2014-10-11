@@ -807,22 +807,20 @@ processor 没有做任何过滤,但如果 `process()` 方法返回 `null`, 则Sp
         </step>
     </job>
 
+## Tasklets(微线程) ##
 
-## 下面的内容还需要整理
-
-## Tasklets ##
-
-将工作划分为组块是一个非常好的战略,嗯,块:读取项目一个一个,处理它们,然后把它们写在一块。 线性操作,但是如果你有一个你想执行需要执行一次? 在这种情况下,你可以建立一个 微 。 微线程可以做任何你需要做的! 例如,它可以从一个FTP站点下载一个文件,解压缩或解密文件,或调用一个web服务来确定是否已经批准执行文件处理。 这里的基本过程建立一个微线程:
+分块是一个非常好的策略,用来将 作业拆分成多块: 依次读取每一个 item , 执行处理, 然后将其按块写出。 但如果想执行某些只需要执行一次的线性操作该怎么办呢?  此时我们可以创建一个 `tasklet`。 `tasklet` 可以执行各种操作/需求! 例如, 可以从FTP站点下载文件, 解压/解密文件, 或者调用web服务来判断文件处理是否已经执行。 下面是创建一个 `tasklet`的基本过程:
 
 
-定义一个类实现 org.springframework.batch.core.step.tasklet.Tasklet 。
-实现 execute() 方法。
-返回适当的 org.springframework.batch.repeat.RepeatStatus 值: 可持续 或 完成了 。
-定义的bean 中 文件。
-创建一个 一步 这有一个 微 引用您的bean。
-清单8展示了新的微,档案的内容我们输入文件并复制到存档目录。
+1. 定义一个实现 `org.springframework.batch.core.step.tasklet.Tasklet` 接口的类。
+2. 实现 `execute()` 方法。
+3. 返回恰当的 `org.springframework.batch.repeat.RepeatStatus` 值: `CONTINUABLE` 或者是 `FINISHED`.
+4. 在 `applicationContext.xml` 文件中定义对应的 bean。
+5. 创建一个 `step`, 其中有一个子元素 `tasklet` 引用第4步定义的bean。
 
-清单8。 ArchiveProductImportFileTasklet.java
+清单9 显示了一个新的 tasklet 的源码, 将我们的输入文件拷贝到存档目录中。
+
+**清单9  `ArchiveProductImportFileTasklet.java`**
 
 
 	package com.geekcap.javaworld.springbatchexample.simple.tasklet;
@@ -864,10 +862,9 @@ processor 没有做任何过滤,但如果 `process()` 方法返回 `null`, 则Sp
 	}
 
 
-的 ArchiveProductImportFileTasklet 类实现了 微 接口,并提供了一个实现的 execute() 方法。 它使用Apache Commons I / O fileutils 类来创建一个新的 存档 目录,然后输入文件副本。
+**ArchiveProductImportFileTasklet** 类实现了 `Tasklet` 接口, 并实现了 `execute()` 方法。 其中使用Apache Commons I/O 工具库的 `FileUtils` 类来创建一个新的 `archive` 目录,然后将input file 拷贝到里面。
 
-bean定义而言,以下bean添加到 中 文件:
-
+将下面的 bean添加到  `applicationContext.xml` 文件中:
 
 
     <bean id="archiveFileTasklet" class="com.geekcap.javaworld.springbatchexample.simple.tasklet.ArchiveProductImportFileTasklet" scope="step">
@@ -875,12 +872,11 @@ bean定义而言,以下bean添加到 中 文件:
     </bean>
 
 
-注意,我们通过 InputFile 工作参数的bean和bean 一步 确保工作范围参数创建bean定义之前。
+注意, 我们传入了一个名为 `inputFile` 的 job 参数, 这个bean 设置了作用域范围 `scope="step"`, 以确保在 bean 对象创建之前需要的 job 参数都被定义。
 
-清单9显示了更新后的工作。
+清单10 显示了更新后的job.
 
-清单9。 file-import-job.xml
-
+**清单10 `file-import-job.xml`**
 
 	<?xml version="1.0" encoding="UTF-8"?>
 	<beans xmlns="http://www.springframework.org/schema/beans"
@@ -909,23 +905,25 @@ bean定义而言,以下bean添加到 中 文件:
 	</beans>
 
 
-清单9中添加一个新的名为步骤文件导入工作 archiveFileStep 然后配置后的“下一个”步骤 importFileStep 。 “下一个”参数允许您控制的流程步骤,安排你的工作。 虽然超出了本文的范围,请注意,您可以定义特殊的决定步骤导致工作分支基于任务的完成状态。 的 archiveFileStep 包含一个 微 ,我们上面创建的bean的引用。
+清单10中添加了一个新的step, id为 `archiveFileStep`, 然后在 `importFileStep` 中将 `"next"` 指向他。  `"next"` 参数允许我们控制job 中 step 的执行流程。 虽然超出了本文所需的范围,但我们需要注意, 可以根据某个任务的执行结果状态来决定下面执行哪个 step[也就是 job分支,类似于 if,switch 什么的]. 的 `archiveFileStep` 只包含上面创建的那个 `tasklet`。
 
-弹性
+## 弹性(Resiliency) ##
 
-Spring Batch的工作弹性给你三个工具:
+Spring Batch job resiliency提供了以下三个工具:
 
-跳过 :如果一个元素在你处理不正确,如不正确格式化的线在你的CSV文件,那么你可以选择跳过该对象并继续处理下一个。
-重试 :如果出现错误,很有可能再次被重试处理解决在几毫秒,那么你可以选择让Spring Batch重试该元素。 例如,你可能会更新记录在数据库中,但另一个查询,物品锁。 不久,锁定的记录有可能会被释放并重新尝试可能会成功。
-重新启动 :如果工作是配置为其状态存储在一个数据库,它失败了,那么你可以选择重新开始,继续在你离开那份工作实例。
-虽然我不会去通过每个弹性特性的细节,我想总结的选项可用。
+1. **Skip** : 如果处理过程中某条记录是错误的, 如CSV文件中格式不正确的行, 那么可以直接跳过该对象, 继续处理下一个。
+2. **Retry** : 如果出现错误,而很可能在几毫秒后再次执行就能解决, 那么可以让 Spring Batch 对该元素重试一次/(或多次)。 例如, 你可能想要更新数据库中的某条, 但另一个查询把这条记录给锁了的情况。 而根据业务设计,这个锁将会很快被释放, 而重新尝试可能就会成功。
+3. **Restart** : 如果将 job 状态存储在数据库中, 而一旦它执行失败, 那么就可以选择重启 job 实例, 并继续上次的执行位置。
 
-跳跃项目
+我们这里不会详细讲述每个 Resiliency 特征, 但我想总结一下可用的选项。
 
-有时你可能想要跳过无效记录读者或加工过程中出现的异常或写作。 这样做,您可以指定两件事:
+### Skipping Items(跳过某项) ###
 
-定义一个 skip-limit 在你的 块 元素告诉Spring有多少物品可以跳过前工作失败(你可能会处理一些无效的记录,但是如果你有太多然后输入数据可能是无效的)。
-定义的列表 skippable-exception-classes 触发跳过的记录,您可以定义 包括 元素的异常将被忽略 排除 元素的异常不会跳过(用在当你想跳过异常层次结构,但排除一个或更多的子类)。
+有时你可能想要跳过某些记录, 比如 reader 读取的无效记录,或者处理/写入过程中出现异常的对象。 要这样做, 我们可以指定两个地方:
+
+- 在 `chunk` 元素上定义 `skip-limit` 属性, 告诉Spring 最多允许跳过多少个 items,超过则 job 失败(如果无效记录很少那你可以接受,但如果无效记录太多,那可能输入数据就有问题了)。
+- 定义一个 `skippable-exception-classes` 列表, 用来判断当前记录是否可以跳过, 可以指定 `include` 元素来决定哪些异常发生时将会跳过当前记录, 还可以指定 `exclude` 元素来决定哪些异常不会触发 skip( 比如你想跳过某个异常层次父类, 但排除一或多个子类异常时)。
+
 例如:
 
 	<job id="simpleFileImportJob" xmlns="http://www.springframework.org/schema/batch">
@@ -941,14 +939,15 @@ Spring Batch的工作弹性给你三个工具:
     </job>
 
 
-在这种情况下,记录中 FlatFileParseException 这是将被忽略。 如果有超过10跳过那么工作失败。
+在这种情况下, 在处理某条记录时如果抛出 **FlatFileParseException** 异常, 则这条记录将被跳过。 如果超过10次 skip, 那么 job 失败。
 
-重试的物品
+### 重试（Retrying Items） ###
 
-在其他情况下,可能发生异常的时候重试是可行的,如失败由于数据库锁。 跳过重试实现非常相似:
+在其他情况下, 有时发生的异常是可以重试的, 如由于数据库锁导致的失败。 重试(Retry)的实现和跳过(Skip)非常相似:
 
-定义一个 retry-limit 在你的 块 元素告诉Spring可以重试多少次一个项目之前,它被认为是失败的。 一次记录失败了就不能工作,除非你把重试和跳过。
-定义的列表 retryable-exception-classes 触发记录重播;您可以定义 包括 元素将重试的异常 排除 元素的异常不会重试。
+- 在 `chunk` 元素上定义 `retry-limit` 属性, 告诉Spring 每个 item 最多允许重试多少次, 超过则认为该记录处理失败。 如果不将重试与跳过组合起来使用,则某条记录处理失败, 则 job也被标记为失败。
+- 定义一个 `retryable-exception-classes` 列表, 用来判断当前记录是否可以重试; 可以指定 `include` 元素来决定哪些异常发生时当前记录可以重试, 还可以指定 `exclude` 元素来决定哪些异常不会重试当前记录.。
+
 例如:
 
 	<job id="simpleFileImportJob" xmlns="http://www.springframework.org/schema/batch">
@@ -964,16 +963,16 @@ Spring Batch的工作弹性给你三个工具:
 	</job>
 
 
-你可以结合重试和skippable异常通过定义一个skippable异常类相匹配的重试例外。 所以,如果你有一个例外,触发5回放,5回放之后,如果还在skippable列表中,那么记录将被忽略。 如果例外不是skippable列表后重试5,它将整个工作失败。
+还可以将重试和可跳过的异常通过对应的 skippable exception class 与 retry exception 组合起来。 因此, 如果某个异常触发了5次重试, 5次重试之后, 如果该异常也在 skippable 列表中, 那么这条记录将被跳过。 如果 exception 不在 skippable列表则会导致整个 job 失败。
 
-重新启动工作
+### 重启 job ###
 
-最后,对于工作,做失败了,您可以选择重新启动它们,让他们拿起自己的确切位置。为了做到这一点,你需要开始工作实例使用相同的工作参数和Spring Batch会发现实例数据库中并继续工作。 你可以选择拒绝重启,你可以控制工作中的一个步骤的次数可以重启重试次数(在一些你可能想放弃。)
+最后, 对于执行失败的 job作业, 我们可以重新启动,并让他们从上次断开的地方继续执行。 要达到这一点, 只需要使用和上次一模一样的参数来启动 job, 则 Spring Batch 会自动从数据库中找到这个实例然后继续执行。 你也可以拒绝重启, 或者参数控制某个 job 中的 一个 step 可以重启的次数(一般来说多次重试都失败了,那我们可能需要放弃。)
 
-##总结##
+## 总结 ##
 
-一些业务问题最好的解决方法是使用批处理和Spring batch实现批处理作业提供了一个框架。 Spring Batch定义了一个分块模式有三个阶段:读取、过程,和写作,以及对读取和写作常见的资源支持。 这一期的 开源Java项目 系列探讨了Spring Batch做什么以及如何使用它。
+某些业务问题使用批处理是最实在的解决方案, 而 Spring batch 框架提供了实现批处理作业的架构。 Spring Batch 将一个分块模式定义为三个阶段: 读取(read)、 处理(process)、 已经写入(write),并且支持对常见资源的读取和写入。 本期的[Open source Java projects ](http://www.javaworld.com/blog/open-source-java-projects/) 系列探讨了 Spring Batch 是干什么的以及如何使用它。
 
-我们开始通过构建一个简单的工作,产品从CSV文件导入到数据库,然后扩展,通过添加一个处理器工作管理产品数量。 最后,我们写了一个单独的微档案输入文件。 虽然不是示例的一部分,Spring Batch的弹性特性很重要,所以我很快了三个弹性Spring Batch提供工具:跳过的记录,重新尝试记录,和重新启动批处理作业。
+我们先创建了一个简单的 job 从CSV文件读取 Product信息然后导入到数据库, 接着添加 processor 来对 job 进行扩展: 用来管理 product 数量。 最后我们写了一个单独的 tasklet 来归档输入文件。 虽然不是示例的一部分, 但Spring Batch 的弹性特征是非常重要的, 所以我快速介绍了Spring Batch提供的三大弹性工具: skipping records, retrying records, 和 restarting batch jobs。
 
-本文只触及表面Spring Batch的能力,但我希望它给你足够的开始构建自己的Spring的批处理作业。
+本文只是简单介绍 Spring Batch 的皮毛, 但希望能让你对使用  Spring Batch 执行批处理作业有一定的了解和认识。
