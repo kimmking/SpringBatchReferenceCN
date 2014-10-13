@@ -6,6 +6,7 @@
    * [Spring Batch架构](01_introduction/13.md)
    * [通用批处理的指导原则](01_introduction/14.md)
    * [批处理策略](01_introduction/15.md)
+   * [非官方示例(CVS_MySQL)](01_introduction/Spring_Batch_MySQL.md)
 * [Spring Batch 3.0新特性](02_spring_batch_30/README.md)
    * [JSR-352支持](02_spring_batch_30/21.md)
    * [改进的Spring Batch Integration模块](02_spring_batch_30/22.md)
