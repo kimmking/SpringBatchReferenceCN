@@ -13,7 +13,7 @@
    * [升级到支持Spring 4和Java 8](02_spring_batch_30/23.md)
    * [JobScope支持](02_spring_batch_30/24.md)
    * [SQLite支持](02_spring_batch_30/25.md)
-* [批处理的域语言](03_domain_language/README.md)
+* [批处理专业术语](03_domain_language/README.md)
 * [配置并运行Job](04_config_job/README.md)
    * [Configuring a Job](04_config_job/41.md)
    * [Java Config](04_config_job/42.md)
