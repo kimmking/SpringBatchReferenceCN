@@ -18,42 +18,152 @@
 * Sean([http://caochengbo.iteye.com](http://caochengbo.iteye.com))
 
 完成百分比：5/17 ~ 29%
-	
-	|章节|页数|   翻译者   | 状态  | 计划完成时间 |
-	
-	| -- |-- |     --     | --    |      --    |
-	
-	| 01 | - | 铁锚       | done  | 2014-08-10 |
-	
-	| 02 | - | stormhouse | done  | 2014-08-02 |
-	
-	| 03 | - | Sean       | done  | 2014-08-03 |
-	
-	| 04 | - | Sean       | doing | 2014-08-20 |
-	
-	| 05 | - | stormhouse | done  | 2014-08-20 |
-	
-	| 06 | - | 铁锚       | doing | 2014-09-20 |
-	
-	| 07 | - | 铁锚       | done  | 2014-09-10 |
-	
-	| 08 | - |    -       |     - | -          |
-	
-	| 09 | - |    -       |     - | -          |
-	
-	| 10 | - |    -       |     - | -          |
-	
-	| 11 | - |    -       |     - | -          |
-	
-	| 12 | - |    -       |     - | -          |
-	
-	| 13 | - |    -       |     - | -          |
-	
-	| 14 | - |    -       |     - | -          |
-	
-	| 15 | - |    -       |     - | -          |
-	
-	| 16 | - |    -       |     - | -          |
-	
-	| 17 | - |    -       |     - | -          |
 
+<table>
+
+<tr>
+<th>章节</th>
+<th>页数</th>
+<th>翻译者</th>
+<th>状态</th>
+<th>计划完成时间</th>
+</tr>
+
+<tr>
+<td> 01 </td>
+<td> - </td>
+<td> 铁锚 </td>
+<td> done </td>
+<td> 2014-08-10 </td>
+</tr>
+
+<tr>
+<td> 02 </td>
+<td> - </td>
+<td> stormhouse </td>
+<td> done </td>
+<td> 2014-08-02 </td>
+</tr>
+
+<tr>
+<td> 03 </td>
+<td> - </td>
+<td> Sean </td>
+<td> done </td>
+<td> 2014-08-03 </td>
+</tr>
+
+<tr>
+<td> 04 </td>
+<td> - </td>
+<td> Sean </td>
+<td> done </td>
+<td> 2014-08-20 </td>
+</tr>
+
+<tr>
+<td> 05 </td>
+<td> - </td>
+<td> stormhouse </td>
+<td> done </td>
+<td> 2014-08-20 </td>
+</tr>
+
+<tr>
+<td> 06 </td>
+<td> - </td>
+<td> 铁锚 </td>
+<td> doing </td>
+<td> 2014-12-31 </td>
+</tr>
+
+<tr>
+<td> 07 </td>
+<td> - </td>
+<td> 铁锚 </td>
+<td> done </td>
+<td> 2014-09-10 </td>
+</tr>
+
+<tr>
+<td> 08 </td>
+<td> - </td>
+<td> - </td>
+<td> - </td>
+<td> - </td>
+</tr>
+
+<tr>
+<td> 09 </td>
+<td> - </td>
+<td> - </td>
+<td> - </td>
+<td> - </td>
+</tr>
+
+<tr>
+<td> 10 </td>
+<td> - </td>
+<td> - </td>
+<td> - </td>
+<td> - </td>
+</tr>
+
+<tr>
+<td> 11 </td>
+<td> - </td>
+<td> - </td>
+<td> - </td>
+<td> - </td>
+</tr>
+
+<tr>
+<td> 12 </td>
+<td> - </td>
+<td> - </td>
+<td> - </td>
+<td> - </td>
+</tr>
+
+<tr>
+<td> 13 </td>
+<td> - </td>
+<td> - </td>
+<td> - </td>
+<td> - </td>
+</tr>
+
+<tr>
+<td> 14 </td>
+<td> - </td>
+<td> - </td>
+<td> - </td>
+<td> - </td>
+</tr>
+
+<tr>
+<td> 15 </td>
+<td> - </td>
+<td> - </td>
+<td> - </td>
+<td> - </td>
+</tr>
+
+<tr>
+<td> 16 </td>
+<td> - </td>
+<td> - </td>
+<td> - </td>
+<td> - </td>
+</tr>
+
+<tr>
+<td> 17 </td>
+<td> - </td>
+<td> - </td>
+<td> - </td>
+<td> - </td>
+</tr>
+
+</table>
+	
