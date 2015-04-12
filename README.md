@@ -2,7 +2,7 @@
 
 原作者：Lucas Ward , Dave Syer , Thomas Risberg , Robert Kasanicky , Dan Garrette , Wayne Lund , Michael Minella , Chris Schaefer , Gunnar Hillert
 
-版本号：3.0.1.RELEASE 查看原文请[点击此处](http://docs.spring.io/spring-batch/trunk/reference/html/index.html)。或者 [](http://docs.spring.io/spring-batch/trunk/reference/htmlsingle/index.html)
+版本号：3.0.1.RELEASE 查看原文请[点击此处](http://docs.spring.io/spring-batch/trunk/reference/html/index.html)。或者 [查看HTML单页面版](http://docs.spring.io/spring-batch/trunk/reference/htmlsingle/index.html)
 
 
 在线预览版本地址: [在线预览](http://kimmking.gitbooks.io/springbatchreference/)
