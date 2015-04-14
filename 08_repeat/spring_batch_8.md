@@ -1,7 +1,6 @@
-8.Repeat
-========
-8.1 RepeatTemplate
-------------------
+#8.Repeat#
+
+#8.1 RepeatTemplate#
 
 批处理是重复的动作-无论是作为一个简单的优化，或作为工作的一部分。策划和归纳重复以及提供一个相当于迭代器的框架，Spring Batch提供RepeatOperations接口，这个RepeatOperations接口看起来像是这样：
 
