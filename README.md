@@ -74,8 +74,8 @@
 <td> 06 </td>
 <td> - </td>
 <td> 铁锚 </td>
-<td> doing </td>
-<td> 2014-04-30 </td>
+<td> done </td>
+<td> 2014-04-15 </td>
 </tr>
 
 <tr>
@@ -113,9 +113,9 @@
 <tr>
 <td> 11 </td>
 <td> - </td>
-<td> - </td>
-<td> - </td>
-<td> - </td>
+<td> 翟伟 </td>
+<td> doing </td>
+<td> 2015-05-15 </td>
 </tr>
 
 <tr>
@@ -135,7 +135,15 @@
 </tr>
 
 <tr>
-<td> 14 </td>
+<td> 14A </td>
+<td> - </td>
+<td> 铁锚 </td>
+<td> doing </td>
+<td> 2014-05-15 </td>
+</tr>
+
+<tr>
+<td> 15B </td>
 <td> - </td>
 <td> - </td>
 <td> - </td>
@@ -143,7 +151,7 @@
 </tr>
 
 <tr>
-<td> 15 </td>
+<td> 16C </td>
 <td> - </td>
 <td> - </td>
 <td> - </td>
@@ -151,15 +159,7 @@
 </tr>
 
 <tr>
-<td> 16 </td>
-<td> - </td>
-<td> - </td>
-<td> - </td>
-<td> - </td>
-</tr>
-
-<tr>
-<td> 17 </td>
+<td> 17G </td>
 <td> - </td>
 <td> - </td>
 <td> - </td>
