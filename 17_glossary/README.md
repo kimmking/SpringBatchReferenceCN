@@ -1,20 +1,24 @@
-# 术语表(Glossary) #
+# 术语表(Glossary)
 
 
-## Spring Batch术语表 ##
+## Spring Batch术语表
 
 
-**Batch** 
+###Batch 
 
-批处理, 需要一定耗时的大量业务处理
 
+An accumulation of business transactions over time.
+
+批处理, 需要消耗一定时间的大量业务处理
+
+随着时间的积累，业务事务
 
 Batch Application Style
 Term used to designate batch as an application style in its own right similar to online, Web or SOA. It has standard elements of input, validation, transformation of information to business model, business processing and output. In addition, it requires monitoring at a macro level.
 
 
 批处理应用程序风格
-术语用于指定批处理应用程序在其自己的风格 类似于网络,网络或SOA。 它有标准的元素 的信息输入、验证、转换经营模式, 业务处理和输出。 此外,它需要监测 宏观层面。
+术语用于指定批处理应用程序在其自己的风格q 类似于网络,网络或SOA。 它有标准的元素 的信息输入、验证、转换经营模式, 业务处理和输出。 此外,它需要监测 宏观层面。
 
 
 Batch Processing

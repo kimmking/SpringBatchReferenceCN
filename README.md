@@ -98,8 +98,8 @@
 <td> 09 </td>
 <td> - </td>
 <td> 赵辉亮 </td>
-<td> doing </td>
-<td> 2015-05-01 </td>
+<td> done </td>
+<td> 2015-04-16 </td>
 </tr>
 
 <tr>
@@ -138,8 +138,8 @@
 <td> 14A </td>
 <td> - </td>
 <td> 铁锚 </td>
-<td> doing </td>
-<td> 2014-05-15 </td>
+<td> done </td>
+<td> 2014-04-21 </td>
 </tr>
 
 <tr>
@@ -161,9 +161,9 @@
 <tr>
 <td> 17G </td>
 <td> - </td>
-<td> - </td>
-<td> - </td>
-<td> - </td>
+<td> 铁锚 </td>
+<td> doing </td>
+<td> 2014-05-21 </td>
 </tr>
 
 </table>
