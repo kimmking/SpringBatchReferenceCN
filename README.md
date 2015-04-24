@@ -162,8 +162,8 @@
 <td> 17G </td>
 <td> - </td>
 <td> 铁锚 </td>
-<td> doing </td>
-<td> 2014-05-21 </td>
+<td> done </td>
+<td> 2014-04-25 </td>
 </tr>
 
 </table>
