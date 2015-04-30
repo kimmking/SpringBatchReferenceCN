@@ -1,5 +1,4 @@
-# JSR352支持
+# 12. JSR-352 支持
 
-# 12. JSR-352 Support
 
-As of Spring Batch 3.0 support for JSR-352 has been fully implemented. This section is not a replacement for the spec itself and instead, intends to explain how the JSR-352 specific concepts apply to Spring Batch. Additional information on JSR-352 can be found via the JCP here: https://jcp.org/en/jsr/detail?id=352
+Spring Batch 3.0 对 JSR-352 提供完整的支持. 本节并不讲述这个规范, 而是讲解如何将 JSR-352 的相关概念应用于Spring Batch. 关于JSR-352 的更多信息可以参考 JCP 网站: [https://jcp.org/en/jsr/detail?id=352](https://jcp.org/en/jsr/detail?id=352)
