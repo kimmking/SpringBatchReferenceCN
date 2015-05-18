@@ -1,0 +1,4 @@
+# 单元测试
+Just as with other application styles, it is extremely important to unit test any code written as part of a batch job as well. The Spring core documentation covers how to unit and integration test with Spring in great detail, so it won't be repeated here. It is important, however, to think about how to 'end to end' test a batch job, which is what this chapter will focus on. The spring-batch-test project includes classes that will help facilitate this end-to-end test approach.
+
+与其他应用程序一样，作为批处理任务的一部分去编写单元测试用例是非常重要的。Spring核心文档极其详尽的描述了如何使用用单元测试和集成测试,所以这里就不再重复。然而，思考一下点对点的批处理任务是很重要的，这是本章的重点。<code>spring-batch-test</code>项目包含的类,将有助于使点到点的测试方法更容易。
