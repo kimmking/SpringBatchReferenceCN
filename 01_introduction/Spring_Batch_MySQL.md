@@ -281,7 +281,7 @@ Product 类是一个简单的POJO,包含4个字段。 清单3显示了 `ProductF
 `ProductItemWriter` 类实现了  `ItemWriter` 接口, 该接口只有一个方法: `write()`.  方法`write()` 接受一个 **list**, 这里是 `List<? extends Product> products` . Spring Batch 使用一种称为 “chunking” 的策略来实现 **writer** ,  chunking 的意思就是在读取时是一次读取一条数据, 但写入时是将一组数据一起执行的。 在job配置中,可以(通过 `commit-interval`)来控制每次想要一起写的item的数量。 在上面的例子中, `write()` 方法做了这些事:
 
 
-1. 执行一条 **SELECT** 语句来根据指定的 `id` 获取 `Product`.
+1. 执行一条 **SELECT** 语句来根据指定的 `id` 获取 `Product`. 
 2. 如果 `SELECT` 取得一条记录, 则 `write()` 中更新数据库中对应记录的值.
 3. 如果 `SELECT` 没有查询结果, 则 `write()` 执行 `INSERT` 将产品信息添加到数据库中.
 
