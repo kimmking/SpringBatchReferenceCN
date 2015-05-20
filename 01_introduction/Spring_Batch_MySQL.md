@@ -278,28 +278,26 @@ Product 类是一个简单的POJO,包含4个字段。 清单3显示了 `ProductF
 
 
 
-**ProductItemWriter** 类继承(extends, 其实继承和实现 implements 没有本质区别.) **ItemWriter** 并实现了其唯一的方法: `write()`. `write()` 方法接受一个泛型继承 `Product` 的 `list` . Spring Batch 使用“chunking”策略实现其 writers , 意思就是读取时是一次执行一个item, 而写入时是将一组数据一块写。 如下面的job配置所示,您可以(通过 `commit-interval`)完全控制每次想要一起写的item的数量。 在上面的例子中, `write()` 方法做了这些事:
+`ProductItemWriter` 类实现了  `ItemWriter` 接口, 该接口只有一个方法: `write()`.  方法`write()` 接受一个 **list**, 这里是 `List<? extends Product> products` . Spring Batch 使用一种称为 “chunking” 的策略来实现 **writer** ,  chunking 的意思就是在读取时是一次读取一条数据, 但写入时是将一组数据一起执行的。 在job配置中,可以(通过 `commit-interval`)来控制每次想要一起写的item的数量。 在上面的例子中, `write()` 方法做了这些事:
+
+
+1. 执行一条 **SELECT** 语句来根据指定的 `id` 获取 `Product`.
+2. 如果 `SELECT` 取得一条记录, 则 `write()` 中更新数据库中对应记录的值.
+3. 如果 `SELECT` 没有查询结果, 则 `write()` 执行 `INSERT` 将产品信息添加到数据库中.
 
 
 
-1. 它执行一个 **SQL** `SELECT` 语句来根据指定的 `id` 检索 **Product**.
-2. 如果 `SELECT` 返回一条记录, 则 write() 中执行一个 `update` 使用新value来更新数据库中的记录.
-3. 如果 `SELECT` 没有返回记录, 则 write() 执行 `INSERT` 将产品信息添加到数据库中.
+**ProductItemWriter** 类使用了Spring的 `JdbcTemplate`  类,这是在  `applicationContext.xml` 文件中定义的, 通过自动装配机制注入到 **ProductItemWriter**  中。 如果你没有用过 Jdbctemplate ,可以把它理解为是对 JDBC 接口的一个封装. 与数据库进行交互的 [模板设计模式](http://java.dzone.com/articles/design-patterns-template-method) 的实现. 代码应该很容易理解, 如果想了解更多信息, 请查看 [SpringJdbcTemplate 的 javadoc](http://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/jdbc/core/JdbcTemplate.html)。
 
 
 
-**ProductItemWriter** 类使用Spring的 `JdbcTemplate`  类,它在  `applicationContext.xml` 文件中定义并通过自动装配机制注入到 **ProductItemWriter** 类。 如果你没有用过 Jdbctemplate 类,可以把它理解为是 JDBC 接口的一个封装. 与数据库进行交互的 [模板设计模式](http://java.dzone.com/articles/design-patterns-template-method) 的实现. 代码应该很容易读懂, 如果你想了解更多信息, 请查看 [SpringJdbcTemplate 的 javadoc](http://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/jdbc/core/JdbcTemplate.html)。
+## 用 application context 将上下文组装起来 ##
 
 
-
-## 与 application context 文件组装 ##
-
+到目前为止我们创建了 `Product`  领域对象类,  一个映射器类 `ProductFieldSetMapper` , 用来将CSV文件中的一行转换为一个对象,  以及 `ProductItemWriter` 类, 用来将对象写入数据库。 下面我们需要配置 Spring Batch 来将这些组件组装起来。  清单5 显示了  `applicationContext.xml` 文件的源代码,  里面定义了我们需要的bean。
 
 
-到目前为止我们已经建立了一个 `Product`  领域对象, 一个  `ProductFieldSetMapper` 类, 用来将CSV文件中的每一行转换为一个对象,  以及一个 `ProductItemWriter` 类, 来将对象写入数据库。 下面我们需要配置 Spring Batch 来将这些东西组装在一起。  清单5 显示了  `applicationContext.xml` 文件的源代码, 这里面定义了我们需要的bean。
-
-
-**清单 5. `applicationContext.xml`**
+> **清单 5. `applicationContext.xml`**
 
 
 	<?xml version="1.0" encoding="UTF-8"?>
