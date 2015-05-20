@@ -1,51 +1,8 @@
-# Spring Batch使用示例: 读取CSV文件并写入MySQL数据库 #
+# Spring Batch示例: 读取CSV文件并写入MySQL数据库 #
 
 原文链接: [Reading and writing CVS files with Spring Batch and MySQL](http://www.javaworld.com/article/2458888/spring-framework/open-source-java-projects-spring-batch.html)
 
 原文作者: [Steven Haines - 技术架构师](http://www.javaworld.com/author/Steven-Haines/)
-
-
-编写批处理程序来处理GB级别数据量无疑是种海啸般难以面对的任务,但我们可以用Spring Batch将其拆解为小块小块的(chunk)。 Spring Batch 是Spring框架的一个模块,专门设计来对各种类型的文件进行批量处理。 本文先讲解一个简单的作业 —— 将产品列表从CSV文件中读取出来,然后导入MySQL数据库中; 然后我们一起研究 Spring Batch 模块的批处理功能(/性能),如单/多处理单元(processors), 同时辅以多个微线程(tasklets); 最后简要介绍Spring Batch对跳过记录(skipping), 重试记录(retrying),以及批处理作业的重启(restarting )等弹性工具。
-
-
-
-如果你曾在Java企业系统中用批处理来处理过成千上万的数据交换,那你就知道工作负载是怎么回事。 批处理系统要处理庞大无比的数据量,处理单条记录失败的情况,还要管理中断,在重启动后不要再去处理那些已经执行过的部分。
-
-
-对于没有相关经验的初学者,下面是需要批处理的一些场景,并且如果使用Spring Batch 很可能会节省你很多宝贵的时间:
-
-
-
-- 接收的文件缺少了一部分需要的信息,你需要读取并解析整个文件,调用某个服务来获得缺少的那部分信息,然后写入到某个输出文件,供其他批处理程序使用。
-- 如果执行环境中发生了一个错误,则将失败信息写入数据库。 有专门的程序每隔15分钟来遍历一次失败信息,如果标记为可以重试,那就再执行一次。
-- 在工作流中,你希望其他系统在收到事件消息时,来调用某个特定服务。 如果其他系统没有调用这个服务,那么一段时间后需要自动清理过期数据,以避免影响到正常的业务流程。
-- 每天收到员工信息更新的文件,你需要为新员工建立相关档案和账号(artifacts)。
-- 有些定制订单的服务。 你需要在每天晚上执行批处理程序来生成清单文件,并将它们发送到相应的供应商手上。
-
-
-
-## 作业与分块: Spring Batch 范例 ##
-
-
-Spring Batch 有很多组成部分,我们先来看批量作业中的核心处理。 可以将一个作业分成下面3个不同的步骤:
-
-1. 读取数据
-2. 对数据进行各种处理
-3. 对数据进行写操作
-
-
-例如,我们可以打开一个CSV格式的数据文件,对文件中的数据执行某些处理,然后将数据写入数据库。 在Spring Batch中, 您需要配置一个读取程序 **reader** 来读取文件中的数据(每次一行), 然后并将每一行数据传递给 **processor** 进行处理, 处理器将会将结果收集并分组为“块 chunks”, 并把这些记录发送给 **writer** ,在这里是插入到数据库中。 可以参考图1所示的周期。
-
-
-![Spring Batch批处理的基本逻辑](./fig1-basicl-ogic.png)
-**图1 Spring Batch批处理的基本逻辑**
-
-
-Spring Batch实现了常见输入源的 readers, 极大地简化了批处理过程.包括 CSV文件, XML文件、数据库、文件中的JSON记录,甚至是 JMS; 同样也实现了对应的 writers。 如有需要,创建自定义的 readers and writers 也是相当简单的。
-
-
-
-首先,让我们一起配置一个 file reader 来读取 CSV文件,将其内容映射到一个对象中,并将生成的对象插入数据库中。
 
 
 
@@ -54,13 +11,60 @@ Spring Batch实现了常见输入源的 readers, 极大地简化了批处理过�
 
 
 
+用批处理程序来操作动辄上GB的数据很可能会拖死整个系统,但现在我们可以通过Spring Batch将其拆解为多个小块(chunk)。Spring框架中的 Spring Batch 模块, 是专门设计了用来对各种类型文件进行批处理的工程。 本文先从一个简单的作业(Job)入手 —— 将从CSV文件中读取产品列表,并导入到MySQL数据库中; 然后我们一起研究 Spring Batch 的批处理特性: 如单/多处理单元(processors), 以及多个微线程(tasklets); 最后简单介绍一下 Spring Batch 提供的用来处理 忽略记录(skipping), 重试记录(retrying),以及批处理作业重启(restarting ) 的弹性工具(resiliency tools)。
+
+
+
+如果你曾在Java企业系统中用批处理来处理过十万级以上的数据, 那么你肯定知道工作负载是怎么回事。 批处理系统需要处理大量的数据, 内部消化单条记录失败的情况, 还要管理中断,在重启后也不去重复执行已经处理过的部分。
+
+
+对于初学者来说,下面是一些需要用到批处理的场景, 在这些情况下如果使用Spring Batch ,则会节省大量的时间:
+
+
+- 接收的文件中缺少了一部分汇总信息,需要读取并解析整个文件,调用服务来获取缺少的那部分信息,然后写入输出文件,供另一个批处理程序使用。
+- 如果在执行代码时发生错误,则将失败信息写入数据库中。 有一个专门的程序每隔15分钟来遍历一次失败信息,如果标记为可以重试,则完成后再重复执行一次。
+- 在工作流中,约定由其他系统在收到消息事件时,来调用某个特定的服务。 但如果其他系统没有调用这个服务,那么一段时间后需要自动清理过期数据,以免影响正常的业务流程。
+- 每天收到员工信息更新文件,需要为新员工建立相关档案和账号(artifacts)。
+- 生成自定义订单的服务。 每天晚上需要执行批处理程序来生成清单文件,并将它们发送给相应的供应商。
+
+
+
+## 作业与分块: Spring Batch 范例 ##
+
+
+Spring Batch 有很多组成部分,我们先来看批量作业中的核心部分。 可以将一个作业分成以下3个步骤:
+
+1. 读取数据
+2. 对数据进行各种处理
+3. 对数据进行写操作
+
+
+例如, 打开一个CSV格式的数据文件,对文件中的数据执行某种处理,然后将数据写入数据库。 在Spring Batch中,  需要配置一个 **reader**  来读取文件中的数据(每次一行),  然后将数据传递给 **processor** 进行处理, 处理完成之后会将结果收集并分组为 “块 chunks” , 然后把这些记录发送给 **writer** ,在这里是插入到数据库中。 如图1所示。
+
+
+![Spring Batch批处理的基本逻辑](./fig1-basicl-ogic.png)
+**图1 Spring Batch批处理的基本逻辑**
+
+
+Spring Batch 提供了常见输入源的 reader 实现, 极大地简化了批处理过程. 例如 CSV文件, XML文件、数据库、文件中的JSON记录,甚至是 JMS; 同样也实现了对应的 writer。 如有需要,创建自定义的 reader 和 writer 也很简单。
+
+
+
+下载本教程的源代码: 
+[SpringBatch-CVS演示代码](./osjp-spring-batch-example.zip)
+
+
+首先,让我们配置一个 file reader 来读取 CSV文件,将其内容映射到一个对象中,并将生成的对象插入数据库中。
+
+
+
 ## 读取并处理CVS文件 ##
 
 
-Spring Batch 内置的reader,  **org.springframework.batch.item.file.FlatFileItemReader** 将文件解析为许多单独的行。 它需要一个纯文本文件的引用,文件开头要忽略的行数(通常是头信息), 以及一个将单行转换为一个对象的 line mapper. 行映射器需要一个分割字符串的分词器,用来将一行划分为各个组成字段, 以及一个field set mapper,根据字段值构建一个对象。  **FlatFileItemReader** 的配置如下所示:
+Spring Batch 的内置 reader,  `org.springframework.batch.item.file.FlatFileItemReader`,用来将文件解析为多个独立的行。 需要纯文本文件的引用,文件开头要忽略的行数(比如标题,表头等信息), 以及将单行转换为对象的 `line mapper`. 行映射器需要一个分割字符串的分词器(line tokenizer),用来将一行拆分成多个组成字段, 还需要一个 field set mapper ,根据字段值构建对象。  `FlatFileItemReader` 的配置如下所示:
 
 
-**清单1 一个Spring Batch 配置文件**
+> **清单1 一个Spring Batch 配置文件**
 
 
     <bean id="productReader" class="org.springframework.batch.item.file.FlatFileItemReader" scope="step">
@@ -87,44 +91,29 @@ Spring Batch 内置的reader,  **org.springframework.batch.item.file.FlatFileIte
     </bean>
 
 
-
-
-让我们来看看这些组件。 首先,图2显示了它们之间的关系:
-
-
-
+下面来看看这些组件。 图2概括了它们之间的关系:
 
 ![FlatFileItemReader组件](./fig2-FlatFileItemReader.png)
 **图2 FlatFileItemReader的组件**
 
 
+**Resources:**  `resource` 属性指定了要读取的文件。 注释部分的 resource 使用了文件的相对路径,也就是批处理作业工作目录下的 `sample.csv` 。 有趣的是使用了Job参数 `InputFile` : 使用*job parameters* 则允许在运行时才根据需要决定相关参数。 在使用 import 文件的情况下, 在运行时才决定使用哪个参数比起在编译时就固定要灵活好用很多。 (要一遍又一遍,五六七八遍导入同一个文件是相当无聊的!)
 
 
-**Resources:**  *resource* 属性指定了要读取的文件。 注释掉的 resource 使用了文件的相对路径,也就是批处理作业工作目录下的 *sample.csv* 。 作业参数 *InputFile* 就更可爱了: job parameters允许在运行时动态指定相关参数。 在使用 import 文件的情况下,在运行时才决定使用哪个参数比起在编译时就固定要灵活好用得多。 (如果要一遍又一遍,五六七八遍导入同一个文件时又会相当的无聊了!)
+**Lines to skip:**  属性`linesToSkip` 告诉 file reader 有多少标题行需要跳过。 通常CSV文件的第一行包含标题信息,如列名称,所以本例中让 reader 跳过文件的第一行。
 
 
+**Line mapper:**   `lineMapper` 负责将一行记录转换为一个对象。 依赖两个组件:
 
-**Lines to skip:** *linesToSkip* 属性告诉 file reader 有多少标题行需要跳过。 CSV文件经常包含标题信息,如列名称,在文件的第一行,所以在本例中,我们让reader 跳过文件的第一行。
-
-
-
-**Line mapper:**   *lineMapper* 负责将每行记录转换成一个对象。 需要依赖两个组件:
-
-
-
-- *LineTokenizer* 指定了如何将一行拆分为多个字段。 本例中我们列出了CSV文件中的列名。
-
-
-- *fieldSetMapper* 从字段值构造一个对象。 在我们的例子中构建了一个 Product对象,属性包括  id, name, description, 以及 quantity 字段。
+- `LineTokenizer` 指定了如何将一行拆分为多个字段。 本例中列出了CSV文件中各列的列名。
+- `fieldSetMapper` 根据字段值构造一个对象。 示例中构建了一个  `Product` 对象, 属性包括  id, name, description, 以及 quantity 。
 
 
 
-请注意,虽然Spring Batch为我们提供的基础框架,但我们仍需要设置字段映射的逻辑。 清单2显示了 *Product* 对象的源码,也就是我们准备构建的对象。
+请注意,虽然Spring Batch提供了基础框架, 但我们仍需要设置字段映射的逻辑。 清单2显示了 *Product* 对象的源码,也就是我们准备构建的对象。
 
 
-
-
-**清单2 Product.java**
+> **清单2 Product.java**
 
 	package com.geekcap.javaworld.springbatchexample.simple.model;
 
@@ -183,13 +172,12 @@ Spring Batch 内置的reader,  **org.springframework.batch.item.file.FlatFileIte
 
 
 
-
-Product 类是一个简单的POJO,包含4个字段。 清单3显示了 *ProductFieldSetMapper* 类的源代码。
-
+Product 类是一个简单的POJO,包含4个字段。 清单3显示了 `ProductFieldSetMapper` 类的源代码。
 
 
 
-**清单3 ProductFieldSetMapper.java**
+
+> **清单3 ProductFieldSetMapper.java**
 
 
 
@@ -218,7 +206,7 @@ Product 类是一个简单的POJO,包含4个字段。 清单3显示了 *ProductF
 
 
 
-*ProductFieldSetMapper* 类继承自 *fieldSetMapper* ,它只定义了一个方法: *mapFieldSet()*.  mapper映射器将每一行解析成一个 *FieldSet*（包含命名好的字段), 然后传递给 mapFieldSet() 方法。 该方法负责组建一个对象来表示 CSV文件中的一行。 在本例中,我们通过 *FieldSet* 的各种 *read* 方法 构建了一个Product实例.
+`ProductFieldSetMapper` 类实现了 `FieldSetMapper` 接口 ,该接口只定义了一个方法: `mapFieldSet()`.  只要 line mapper 将一行数据解析为单独的字段, 就会构建一个 `FieldSet`（包含命名好的字段), 然后将这个 `FieldSet` 对象传递给 `mapFieldSet()` 方法。 该方法负责创建对象来表示 CSV文件中的一行。 在本例中,我们通过 `FieldSet` 的各种 `read` 方法 构建一个 `Product` 实例.
 
 
 
@@ -226,11 +214,11 @@ Product 类是一个简单的POJO,包含4个字段。 清单3显示了 *ProductF
 
 
 
-在读取文件之后,我们得到了一组 `Product` ,下一步就是将其写入数据库。 技术上允许我们将这些数据连接到一个 processing  step,对数据做一些处理之类的,为简单起见,我们只将数据写到数据库中。 清单4显示了 **ProductItemWriter** 类的源代码。
+在读取文件得到一组 `Product` 之后 ,下一步就是将其写入到数据库。 原则上我们可以组装一个 processing  step,用来对这些数据进行某些业务处理,为简单起见,我们直接将数据写到数据库中。 清单4是 **ProductItemWriter** 类的源码。
 
 
 
-**清单4 `ProductItemWriter.java`**
+> **清单4 `ProductItemWriter.java`**
 
 
 
@@ -976,3 +964,8 @@ Spring Batch job resiliency提供了以下三个工具:
 我们先创建了一个简单的 job 从CSV文件读取 Product信息然后导入到数据库, 接着添加 processor 来对 job 进行扩展: 用来管理 product 数量。 最后我们写了一个单独的 tasklet 来归档输入文件。 虽然不是示例的一部分, 但Spring Batch 的弹性特征是非常重要的, 所以我快速介绍了Spring Batch提供的三大弹性工具: skipping records, retrying records, 和 restarting batch jobs。
 
 本文只是简单介绍 Spring Batch 的皮毛, 但希望能让你对使用  Spring Batch 执行批处理作业有一定的了解和认识。
+
+
+
+下载本教程的源代码: 
+[SpringBatch-CVS演示代码](./osjp-spring-batch-example.zip)
