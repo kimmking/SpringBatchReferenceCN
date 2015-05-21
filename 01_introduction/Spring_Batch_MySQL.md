@@ -7,7 +7,7 @@
 
 
 下载本教程的源代码: 
-[SpringBatch-CVS演示代码](./osjp-spring-batch-example.zip)
+[SpringBatch-CSV演示代码][osjp-spring-batch-example.zip]
 
 
 
@@ -51,7 +51,7 @@ Spring Batch 提供了常见输入源的 reader 实现, 极大地简化了批处
 
 
 下载本教程的源代码: 
-[SpringBatch-CVS演示代码](./osjp-spring-batch-example.zip)
+[SpringBatch-CSV演示代码][osjp-spring-batch-example.zip]
 
 
 首先,让我们配置一个 file reader 来读取 CSV文件,将其内容映射到一个对象中,并将生成的对象插入数据库中。
@@ -997,4 +997,8 @@ Spring Batch job resiliency提供了以下三个工具:
 
 
 下载本教程的源代码: 
-[SpringBatch-CVS演示代码](./osjp-spring-batch-example.zip)
+[SpringBatch-CSV演示代码][osjp-spring-batch-example.zip]
+
+
+
+[osjp-spring-batch-example.zip]: https://github.com/cncounter/SpringBatchReferenceCN/raw/master/01_introduction/osjp-spring-batch-example.zip
