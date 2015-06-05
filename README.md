@@ -106,7 +106,7 @@
 <td> 10 </td>
 <td> - </td>
 <td> 赵辉亮 </td>
-<td> doing </td>
+<td> done </td>
 <td> 2015-07-16 </td>
 </tr>
 
@@ -122,7 +122,7 @@
 <td> 12 </td>
 <td> - </td>
 <td> 铁锚 </td>
-<td> doing </td>
+<td> done </td>
 <td> 2015-06-01 </td>
 </tr>
 
