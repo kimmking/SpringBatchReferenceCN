@@ -17,6 +17,7 @@
 * 铁锚([http://blog.csdn.net/renfufei](http://blog.csdn.net/renfufei))
 * stormhouse([http://stormhouse.github.io/](http://stormhouse.github.io/))
 * Sean([http://caochengbo.iteye.com](http://caochengbo.iteye.com))
+* 会亮([http://blog.csdn.net/ohalo](http://blog.csdn.net/ohalo))
 
 完成百分比：14/17 ~ 82%
 
