@@ -18,7 +18,7 @@
 * stormhouse([http://stormhouse.github.io/](http://stormhouse.github.io/))
 * Sean([http://caochengbo.iteye.com](http://caochengbo.iteye.com))
 
-完成百分比：13/17 ~ 76%
+完成百分比：14/17 ~ 82%
 
 <table>
 
@@ -114,8 +114,8 @@
 <td> 11 </td>
 <td> - </td>
 <td> 翟伟 </td>
-<td> doing </td>
-<td> 2015-05-15 </td>
+<td> done </td>
+<td> 2015-11-11 </td>
 </tr>
 
 <tr>

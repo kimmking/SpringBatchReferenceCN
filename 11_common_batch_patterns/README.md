@@ -1,1 +1,5 @@
-# 通用批处理模式
+#11.通用批处理模型
+
+>一些批处理任务可以使用spring batch现成的组件完全的组装.例如ItemReader和ItemWriter实现可配置覆盖范围广泛的场景,然而,对于大多数情况下,必须编写自定义代码。应用程序开发人员的主要API人口点是Tasklet,ItemReader ItemWriter和各种各样的监听器接口.最简单的批处理任务能够使用Spring BatchItemReader现成的输出,但通常情况下,自定义问题的处理和写作,需要开发人员实现一个ItemWriter或ItemProcessor.
+>
+>在这里,我们提供了一个通用模式自定义业务逻辑的一些例子.这些例子的主要特性是监听器接口,应该注意的是,如果合适,一个ItemReader或ItemWriter也可以实现一个监听器接口。
